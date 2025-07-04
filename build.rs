@@ -102,16 +102,18 @@ fn generate_bindings(header: &str) -> bindgen::Builder {
         // bindings for.
         .header(header)
         .allowlist_function("NVSDK_NGX_.*")
-        .allowlist_type("NVSDK_NGX_.*")
-        .allowlist_var("NVSDK_NGX_.*");
-        //.allowlist_recursively(false);
+        .allowlist_type("(PFN_)?NVSDK_NGX_.*")
+        .allowlist_var("NVSDK_NGX_.*")
+        .blocklist_item(".*D3[dD]11.*")
+        .blocklist_item(".*CUDA.*")
+        .allowlist_recursively(false)
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         //.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         //.impl_debug(true)
         //.impl_partialeq(true)
         //.prepend_enum_name(false)
-        //.bitfield_enum("NVSDK_NGX_DLSS_Feature_Flags")
+        .bitfield_enum("NVSDK_NGX_DLSS_Feature_Flags");
         //.disable_name_namespacing()
         //.disable_nested_struct_naming()
         //.default_enum_style(bindgen::EnumVariation::Rust {
@@ -158,6 +160,7 @@ fn compile_vk_headers() {
     // the resulting bindings.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     generate_bindings(HEADER_FILE_PATH)
+    .blocklist_item(".*D3[dD]12.*")
         .clang_arg(format!("-I{}/Include", sdk))
         // Finish the builder and generate the bindings.
         .generate()
