@@ -1,9 +1,9 @@
 //! The errors the NGX crate might have.
 
-use crate as bindings;
+use crate::{self as bindings};
 
 /// The result type used within the crate.
-pub type Result<T = ()> = std::result::Result<T, Error>;
+pub type Result<T = (),E = Error> = std::result::Result<T, E>;
 
 /// The error type.
 #[derive(Debug, Clone)]

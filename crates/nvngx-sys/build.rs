@@ -1,19 +1,20 @@
 use std::env;
 use std::path::{Path, PathBuf};
 
-fn is_docs_rs_build() -> bool {
-    std::env::var("DOCS_RS").is_ok()
-}
+// fn is_docs_rs_build() -> bool {
+    // std::env::var("DOCS_RS").is_ok()
+// }
 
 fn generate_bindings(header: &str) -> bindgen::Builder {
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
-    let bindings = bindgen::Builder::default()
+    bindgen::Builder::default()
         // The input header we would like to generate
         // bindings for.
         .header(header)
-        .allowlist_function("NVSDK_NGX_.*")
+        //.allowlist_function("NVSDK_NGX_.*")
+        .allowlist_function(".*NGX.*")
         .allowlist_type("(PFN_)?NVSDK_NGX_.*")
         .allowlist_var("NVSDK_NGX_.*")
         .blocklist_item(".*D3[dD]11.*")
@@ -21,18 +22,16 @@ fn generate_bindings(header: &str) -> bindgen::Builder {
         .allowlist_recursively(false)
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
-        //.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        //.impl_debug(true)
-        //.impl_partialeq(true)
-        //.prepend_enum_name(false)
-        .bitfield_enum("NVSDK_NGX_DLSS_Feature_Flags");
-    //.disable_name_namespacing()
-    //.disable_nested_struct_naming()
-    //.default_enum_style(bindgen::EnumVariation::Rust {
-    //    non_exhaustive: true,
-    //});
+        .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
+        .impl_debug(true)
+        .impl_partialeq(true)
+        .prepend_enum_name(false)
+        .bitfield_enum("NVSDK_NGX_DLSS_Feature_Flags")
+        .disable_name_namespacing()
+        .disable_nested_struct_naming()
+        .default_enum_style(bindgen::EnumVariation::Rust {
+        non_exhaustive: true, })
 
-    bindings
 }
 
 #[cfg(feature = "dx")]
@@ -95,24 +94,27 @@ fn windows_mt_suffix() -> &'static str {
 }
 
 fn link_libs() {
+    let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()); // Gets location of the toml file
     let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
-    let dlss_library_path = Path::new(match target_os.as_str() {
-        "windows" => "DLSS/lib/Windows_x86_64",
-        "linux" => "DLSS/lib/Linux_x86_64",
+    let dlss_library_path = match target_os.as_str() {
+        "windows" => manifest_dir.join("DLSS/lib/Windows_x86_64"),
+        "linux" => manifest_dir.join("DLSS/lib/Linux_x86_64"),
         x => todo!("No libraries for {x}"),
-    });
+    };
 
+    println!("cargo:warning=Working Dir is: {}", dlss_library_path.display());
     // First link our Rust project against the right version of nvsdk_ngx
     match target_os.as_str() {
         "windows" => {
             // TODO: Only one architecture is included (and for vs201x)
             let link_library_path = dlss_library_path.join("x64");
+            println!("cargo:rustc-link-search={}", link_library_path.display());
+            println!("cargo:rustc-link-search={}", dlss_library_path.join("rel").display());
             let windows_mt_suffix = windows_mt_suffix();
             #[cfg(feature = "rel")]
             println!("cargo:rustc-link-lib=nvsdk_ngx{windows_mt_suffix}");
             #[cfg(feature = "dev")]
             println!("cargo:rustc-link-lib=nvsdk_ngx{windows_mt_suffix}_dbg");
-            println!("cargo:rustc-link-search={}", link_library_path.display());
         }
         "linux" => {
             // On Linux there is only one link-library

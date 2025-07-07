@@ -5,7 +5,13 @@
 #![allow(non_snake_case)]
 #![allow(clippy::all)]
 
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
+//include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 pub mod error;
 pub use error::*;
+
+pub mod vulkan;
+pub use vulkan::*;
+
+// pub mod directx;
+// pub use directx::*; 
