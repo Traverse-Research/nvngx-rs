@@ -9,13 +9,19 @@ license = "MIT"
 keywords = ["nvidia", "ngx", "DLSS", "upscaling", "supersampling"]
 rust-version = "1.57"
 repository = "https://github.com/iddm/nvngx-rs"
-documentation = "https://docs.rs/nvngx-rs"
 
 [dependencies]
 widestring = "1"
-ash = "0.37"
+ash = { version = "0.37", optional = true }
 log = "0.4"
 uuid = { version = "1", features = ["v4"] }
 derive_builder = "0.12"
-nvngx-sys = "0.3.0"
-# nvngx-sys = { path = "../nvngx-sys" }
+nvngx-sys = { version = "0.3.0", path = "../nvngx-sys" }
+windows = { version = "0.61", features = ["Win32_Graphics_Direct3D12", "Win32_Graphics_Dxgi_Common"], optional = true }
+
+[features]
+default = ["rel", "dx", "vk"]
+vk = ["dep:ash"]
+dx = ["dep:windows"]
+dev = []
+rel = []

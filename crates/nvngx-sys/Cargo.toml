@@ -9,18 +9,31 @@ license = "MIT"
 keywords = ["nvidia", "ngx", "DLSS", "upscaling", "supersampling"]
 rust-version = "1.57"
 repository = "https://github.com/iddm/nvngx-rs"
-documentation = "https://docs.rs/nvngx-rs"
 
 include = [
+    # "DLSS/lib/Windows_x86_64/{x64,dev,rel}/",
+    # TODO: This crate doesn't embed the runtime libraries (.dll/.so)?
+    "DLSS/lib/Windows_x86_64/{x64}/",
     "DLSS/lib/Linux_x86_64/libnvsdk_ngx.a",
-    "DLSS/include/**/*",
-    "src/*",
+    "DLSS/include/",
+    "src/",
     "build.rs",
 ]
 
 [build-dependencies]
 bindgen = "0.71"
+cc = "1"
 
 [dependencies]
 widestring = "1"
 libc = "0.2"
+# TODO: These are not technically "sys" crates
+ash = { version = "0.37", optional = true }
+windows = { version = "0.61", features = ["Win32_Graphics_Direct3D12", "Win32_Graphics_Dxgi_Common"], optional = true }
+
+[features]
+default = ["rel", "dx", "vk"]
+vk = ["dep:ash"]
+dx = ["dep:windows"]
+dev = []
+rel = []
