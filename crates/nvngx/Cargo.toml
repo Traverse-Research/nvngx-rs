@@ -21,7 +21,7 @@ windows = { version = "0.61", features = ["Win32_Graphics_Direct3D12", "Win32_Gr
 
 [features]
 default = ["rel", "dx", "vk"]
-vk = ["dep:ash"]
-dx = ["dep:windows"]
-dev = []
-rel = []
+vk = ["nvngx-sys/vk", "dep:ash"]
+dx = ["nvngx-sys/dx", "dep:windows"]
+dev = ["nvngx-sys/dev"]
+rel = ["nvngx-sys/rel"]
