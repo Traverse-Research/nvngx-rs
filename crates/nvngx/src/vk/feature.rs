@@ -487,8 +487,8 @@ impl Feature {
         let mut handle = FeatureHandle::new();
         Result::from(unsafe {
             nvngx_sys::NVSDK_NGX_VULKAN_CreateFeature1(
-                device.as_pointer_mut(),
-                command_buffer.as_pointer_mut(),
+                device,
+                command_buffer,
                 feature_type,
                 parameters.0,
                 &mut handle.0 as *mut _,
@@ -520,8 +520,8 @@ impl Feature {
         unsafe {
             let mut handle = FeatureHandle::new();
             Result::from(nvngx_sys::HELPERS_NGX_VULKAN_CREATE_DLSS_EXT1(
-                device.as_pointer_mut(),
-                command_buffer.as_pointer_mut(),
+                device,
+                command_buffer,
                 1,
                 1,
                 &mut handle.0 as *mut _,
@@ -572,8 +572,8 @@ impl Feature {
         unsafe {
             let mut handle = FeatureHandle::new();
             Result::from(nvngx_sys::HELPERS_NGX_VULKAN_CREATE_DLSSD_EXT1(
-                device.as_pointer_mut(),
-                command_buffer.as_pointer_mut(),
+                device,
+                command_buffer,
                 1,
                 1,
                 &mut handle.0 as *mut _,
@@ -660,7 +660,7 @@ impl Feature {
     pub fn evaluate(&self, command_buffer: vk::CommandBuffer) -> Result {
         unsafe {
             nvngx_sys::NVSDK_NGX_VULKAN_EvaluateFeature_C(
-                command_buffer.as_pointer_mut(),
+                command_buffer,
                 self.handle.0,
                 self.parameters.0,
                 Some(feature_progress_callback),
