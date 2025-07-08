@@ -13,6 +13,8 @@ use ash::vk::{
     PhysicalDevice as VkPhysicalDevice,
 };
 
+use libc::wchar_t;
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 pub mod error;

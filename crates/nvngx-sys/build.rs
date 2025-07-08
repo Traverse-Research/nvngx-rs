@@ -112,14 +112,17 @@ fn main() {
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         // Types and functions defined by the SDK:
-        .allowlist_item("NVSDK_NGX_\\w+")
+        .allowlist_item(r"(PFN_)?NVSDK_NGX_\w+")
         // Single exception for a function that doesn't adhere to the naming standard:
         .allowlist_function("GetNGXResultAsString")
         // Exportable symbols defined by our `bindings.c/h`, wrapping `static inline` helpers
-        .allowlist_function("HELPERS_NGX_\\w+")
-        // Disable all Vulkan types which will be imported in-scope from the `ash` crate
-        .blocklist_type("Vk\\w+")
-        .blocklist_type("PFN_vk\\w+")
+        .allowlist_function(r"HELPERS_NGX_\w+")
+        // Disallow DirectX and CUDA APIs, for which we do not yet provide/implement bindings
+        .blocklist_item(r"\w+D3[Dd]1[12]\w+")
+        .blocklist_type("PFN_NVSDK_NGX_ResourceReleaseCallback")
+        .blocklist_item(r"\w+CUDA\w+")
+        // Disallow all other dependencies, like those from libc or Vulkan.
+        .allowlist_recursively(false)
         .impl_debug(true)
         .impl_partialeq(true)
         .derive_default(true)
