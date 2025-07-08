@@ -30,11 +30,9 @@ jobs:
 
       - name: Install toolchain
         id: tc
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@master
         with:
           toolchain: ${{ matrix.toolchain || 'stable' }}
-          profile: minimal
-          override: true
 
       - name: Setup cache
         if: runner.os != 'macOS'
@@ -44,7 +42,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-test-${{ steps.tc.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-test-${{ steps.tc.outputs.cachekey }}-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Install Vulkan loader
         run: sudo apt-get install libvulkan-dev
@@ -69,13 +67,9 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      - name: Install toolchain
+      - name: Install stable toolchain
         id: tc
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          profile: minimal
-          override: true
+        uses: dtolnay/rust-toolchain@stable
 
       - name: Setup cache
         uses: actions/cache@v4
@@ -84,7 +78,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-clippy-${{ steps.tc.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-clippy-${{ steps.tc.outputs.cachekey }}-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Install Vulkan loader
         run: sudo apt-get install libvulkan-dev
@@ -100,11 +94,9 @@ jobs:
 
       - name: Install toolchain (${{ env.minrust }})
         id: tc
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@stable
         with:
           toolchain: ${{ env.minrust }}
-          profile: minimal
-          override: true
 
       - name: Setup cache
         uses: actions/cache@v4
@@ -113,7 +105,7 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             target
-          key: ${{ runner.os }}-msrv-${{ steps.tc.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-msrv-${{ steps.tc.outputs.cachekey }}-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Install Vulkan loader
         run: sudo apt-get install libvulkan-dev
@@ -128,13 +120,9 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@v4
 
-      - name: Install toolchain
+      - name: Install nightly toolchain
         id: tc
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          profile: minimal
-          override: true
+        uses: dtolnay/rust-toolchain@nightly
 
       - name: Setup cache
         uses: actions/cache@v4
@@ -142,7 +130,7 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
-          key: ${{ runner.os }}-docs-${{ steps.tc.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.toml') }}
+          key: ${{ runner.os }}-docs-${{ steps.tc.outputs.cachekey }}-${{ hashFiles('**/Cargo.toml') }}
 
       - name: Install Vulkan loader
         run: sudo apt-get install libvulkan-dev
