@@ -6,9 +6,8 @@ use ash::vk;
 use nvngx_sys::{
     NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions, NVSDK_NGX_Feature, NVSDK_NGX_ImageViewInfo_VK,
     NVSDK_NGX_PerfQuality_Value, NVSDK_NGX_Resource_VK, NVSDK_NGX_Resource_VK_Type,
-    NVSDK_NGX_Resource_VK__bindgen_ty_1, Result, 
+    NVSDK_NGX_Resource_VK__bindgen_ty_1, Result,
 };
-
 
 pub mod feature;
 pub use feature::*;
@@ -18,11 +17,11 @@ pub mod ray_reconstruction;
 pub use ray_reconstruction::*;
 
 fn convert_slice_of_strings_to_cstrings(data: &[String]) -> Result<Vec<std::ffi::CString>> {
-    data
-        .iter()
+    data.iter()
         .cloned()
-        .map(|s| std::ffi::CString::new(s))
-        .collect::<Result<_,_>>().map_err(|_|"Couldn't convert the extensions to CStrings.".into())
+        .map(std::ffi::CString::new)
+        .collect::<Result<_, _>>()
+        .map_err(|_| "Couldn't convert the extensions to CStrings.".into())
 }
 
 /// Vulkan extensions required for the NVIDIA NGX operation.
@@ -98,35 +97,6 @@ pub struct System {
     device: vk::Device,
 }
 
-// Current [`ash::Entry`] with which the NGX was associated.
-// static mut ASH_ENTRY: Option<ManuallyDrop<ash::Entry>> = None;
-
-// Current [`ash::Instance`] with which the NGX was associated.
-// static mut ASH_INSTANCE: Option<ManuallyDrop<ash::Instance>> = None;
-
-
-// unsafe extern "system" fn get_instance_proc_addr(
-//     instance:  ash::vk::Instance,
-//     proc_name: *const i8,
-// ) -> Option<unsafe extern "system" fn()> {
-//     ASH_ENTRY.as_ref().and_then(|e| {
-//         let raw_handle = vk::Instance::from_raw(instance as u64);
-//         e.get_instance_proc_addr(raw_handle, proc_name)
-//             .map(|p| std::mem::transmute(p))
-//     })
-// }
-
-// unsafe extern "system" fn get_device_proc_addr(
-//     logical_device: *mut ash::vk::Device,
-//     proc_name: *const i8,
-// ) -> Option<unsafe extern "system" fn()> {
-//     ASH_INSTANCE.as_ref().and_then(|i| {
-//         let raw_handle = vk::Device::from_raw(logical_device as u64);
-//         (i.fp_v1_0().get_device_proc_addr)(raw_handle, proc_name)
-//             .map(|p| std::mem::transmute(p))
-//     })
-// }
-
 impl System {
     /// Creates a new NVIDIA NGX system.
     pub fn new(
@@ -139,8 +109,8 @@ impl System {
         logical_device: vk::Device,
     ) -> Result<Self> {
         // unsafe {
-            // ASH_ENTRY = Some(ManuallyDrop::new(entry.clone()));
-            // ASH_INSTANCE = Some(ManuallyDrop::new(instance.clone()));
+        // ASH_ENTRY = Some(ManuallyDrop::new(entry.clone()));
+        // ASH_INSTANCE = Some(ManuallyDrop::new(instance.clone()));
         // }
         let engine_type = nvngx_sys::NVSDK_NGX_EngineType::NVSDK_NGX_ENGINE_TYPE_CUSTOM;
         let project_id =
@@ -294,32 +264,21 @@ impl From<VkImageResourceDescription> for NVSDK_NGX_Resource_VK {
             level_count: value.subresource_range.level_count,
             layer_count: value.subresource_range.layer_count,
         };
-        let mut vk_format: vk::Format = unsafe { std::mem::zeroed() };
-        unsafe {
-            let ptr = &mut vk_format as *mut _ as *mut i32;
-            *ptr = value.format.as_raw();
-        }
 
-        let image_view_info = NVSDK_NGX_ImageViewInfo_VK
-        {
-            ImageView: { value.image_view },
-            Image: { value.image },
+        // Cannot use a Rust `union` constructor because bindgen doesn't know
+        // our `Vk*` types anymore and wraps them in __BindgenUnionField:
+        // https://github.com/rust-lang/rust-bindgen/issues/2187#issuecomment-3048892937
+        let mut image_resource = NVSDK_NGX_Resource_VK__bindgen_ty_1::default();
+        let image_view_info = NVSDK_NGX_ImageViewInfo_VK {
+            ImageView: value.image_view,
+            Image: value.image,
             SubresourceRange: vk_image_subresource_range,
-            Format: vk_format,
+            Format: value.format,
             Width: value.width,
             Height: value.height,
         };
+        unsafe { *image_resource.ImageViewInfo.as_mut() = image_view_info }
 
-        let mut image_resource = NVSDK_NGX_Resource_VK__bindgen_ty_1 {
-            ImageViewInfo: Default::default(),
-            BufferInfo: Default::default(),
-            bindgen_union_field: [0;6],
-            };
-
-
-            unsafe {
-                *image_resource.ImageViewInfo.as_mut() = image_view_info;
-            }
         Self {
             Resource: image_resource,
             Type: NVSDK_NGX_Resource_VK_Type::NVSDK_NGX_RESOURCE_VK_TYPE_VK_IMAGEVIEW,

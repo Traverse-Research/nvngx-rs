@@ -1,11 +1,12 @@
 use std::env;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 // fn is_docs_rs_build() -> bool {
-    // std::env::var("DOCS_RS").is_ok()
+// std::env::var("DOCS_RS").is_ok()
 // }
 
 fn generate_bindings(header: &str) -> bindgen::Builder {
+    println!("cargo:rerun-if-changed={header}");
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
@@ -25,13 +26,14 @@ fn generate_bindings(header: &str) -> bindgen::Builder {
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         .impl_debug(true)
         .impl_partialeq(true)
+        .derive_default(true)
         .prepend_enum_name(false)
         .bitfield_enum("NVSDK_NGX_DLSS_Feature_Flags")
         .disable_name_namespacing()
         .disable_nested_struct_naming()
         .default_enum_style(bindgen::EnumVariation::Rust {
-        non_exhaustive: true, })
-
+            non_exhaustive: true,
+        })
 }
 
 #[cfg(feature = "dx")]
@@ -40,8 +42,6 @@ fn compile_dx_headers() {
     const HEADER_FILE_PATH: &str = "src/dx_wrapper.h";
 
     cc::Build::new().file(SOURCE_FILE_PATH).compile("dx_source");
-    println!("cargo:rustc-link-lib=dx_source");
-    println!("cargo:rerun-if-changed={HEADER_FILE_PATH}");
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     generate_bindings(HEADER_FILE_PATH)
@@ -57,23 +57,21 @@ fn compile_dx_headers() {
 fn compile_vk_headers() {
     const SOURCE_FILE_PATH: &str = "src/vk_source.c";
     const HEADER_FILE_PATH: &str = "src/vk_wrapper.h";
-    let sdk = env::var("VULKAN_SDK").expect("Could Not Locate Vulkan SDK");
-    // Tell cargo to invalidate the built crate whenever the wrapper changes
-    println!("cargo:rerun-if-changed={HEADER_FILE_PATH}");
+    // TODO: This should be in the default include path already
+    // let sdk = PathBuf::from(env::var("VULKAN_SDK").expect("Could Not Locate Vulkan SDK"));
 
     cc::Build::new()
         .file(SOURCE_FILE_PATH)
-        .include(PathBuf::from(&sdk).join("Include"))
+        // .include(sdk.join("include"))
         .compile("vk_source");
 
-    println!("cargo:rustc-link-lib=vk_source");
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     generate_bindings(HEADER_FILE_PATH)
         .blocklist_item(".*D3[dD]12.*")
-        .clang_arg(format!("-I{}/Include", sdk))
+        // .clang_arg(format!("-I{}", sdk.join("include").display()))
         // Finish the builder and generate the bindings.
         .generate()
         // Unwrap the Result and panic on failure.
@@ -102,14 +100,20 @@ fn link_libs() {
         x => todo!("No libraries for {x}"),
     };
 
-    println!("cargo:warning=Working Dir is: {}", dlss_library_path.display());
+    println!(
+        "cargo:warning=Working Dir is: {}",
+        dlss_library_path.display()
+    );
     // First link our Rust project against the right version of nvsdk_ngx
     match target_os.as_str() {
         "windows" => {
             // TODO: Only one architecture is included (and for vs201x)
             let link_library_path = dlss_library_path.join("x64");
             println!("cargo:rustc-link-search={}", link_library_path.display());
-            println!("cargo:rustc-link-search={}", dlss_library_path.join("rel").display());
+            println!(
+                "cargo:rustc-link-search={}",
+                dlss_library_path.join("rel").display()
+            );
             let windows_mt_suffix = windows_mt_suffix();
             #[cfg(feature = "rel")]
             println!("cargo:rustc-link-lib=nvsdk_ngx{windows_mt_suffix}");

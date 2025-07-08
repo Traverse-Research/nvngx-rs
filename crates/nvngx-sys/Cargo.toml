@@ -29,6 +29,8 @@ widestring = "1"
 libc = "0.2"
 # TODO: These are not technically "sys" crates
 ash = { version = "0.37", optional = true }
+
+[target.'cfg(windows)'.dependencies]
 windows = { version = "0.61", features = ["Win32_Graphics_Direct3D12", "Win32_Graphics_Dxgi_Common"], optional = true }
 
 [features]
