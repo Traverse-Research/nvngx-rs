@@ -3,7 +3,7 @@
 use crate::{self as bindings};
 
 /// The result type used within the crate.
-pub type Result<T = (),E = Error> = std::result::Result<T, E>;
+pub type Result<T = (), E = Error> = std::result::Result<T, E>;
 
 /// The error type.
 #[derive(Debug, Clone)]
