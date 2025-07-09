@@ -57,22 +57,33 @@ fn compile_dx_headers() {
 fn compile_vk_headers() {
     const SOURCE_FILE_PATH: &str = "src/vk_source.c";
     const HEADER_FILE_PATH: &str = "src/vk_wrapper.h";
-    // TODO: This should be in the default include path already
-    // let sdk = PathBuf::from(env::var("VULKAN_SDK").expect("Could Not Locate Vulkan SDK"));
 
-    cc::Build::new()
-        .file(SOURCE_FILE_PATH)
-        // .include(sdk.join("include"))
-        .compile("vk_source");
+    let vulkan_sdk = match env::var("VULKAN_SDK") {
+        Ok(v) => Some(PathBuf::from(v)),
+        Err(env::VarError::NotPresent) => None,
+        Err(env::VarError::NotUnicode(e)) => {
+            panic!("VULKAN_SDK environment variable is not Unicode: {e:?}")
+        }
+    };
+
+    let mut build = cc::Build::new();
+    build.file(SOURCE_FILE_PATH);
+    if let Some(vulkan_sdk) = &vulkan_sdk {
+        build.include(vulkan_sdk.join("include"));
+    }
+    build.compile("vk_source");
 
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    generate_bindings(HEADER_FILE_PATH)
-        .blocklist_item(".*D3[dD]12.*")
-        // .clang_arg(format!("-I{}", sdk.join("include").display()))
-        // Finish the builder and generate the bindings.
+    let mut bindings = generate_bindings(HEADER_FILE_PATH).blocklist_item(".*D3[dD]12.*");
+
+    if let Some(vulkan_sdk) = &vulkan_sdk {
+        bindings = bindings.clang_arg(format!("-I{}", vulkan_sdk.join("include").display()));
+    }
+    // Finish the builder and generate the bindings.
+    bindings
         .generate()
         // Unwrap the Result and panic on failure.
         .expect("Unable to generate bindings")
