@@ -18,6 +18,7 @@ impl FeatureHandle {
         Self::default()
     }
 
+    // TODO: This should be unsafe, take Self (and write self.0=null()), or inlined into drop().
     fn release(&mut self) -> Result {
         unsafe { nvngx_sys::NVSDK_NGX_VULKAN_ReleaseFeature(self.0) }.into()
     }

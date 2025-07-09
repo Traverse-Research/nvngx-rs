@@ -11,6 +11,6 @@ use ash::vk::{
     Instance as VkInstance, PFN_vkGetDeviceProcAddr, PFN_vkGetInstanceProcAddr,
     PhysicalDevice as VkPhysicalDevice,
 };
-use widestring::WideChar as wchar_t;
+use libc::wchar_t;
 
 include!(concat!(env!("OUT_DIR"), "/vk_bindings.rs"));
