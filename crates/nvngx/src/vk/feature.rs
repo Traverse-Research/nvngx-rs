@@ -100,7 +100,7 @@ macro_rules! insert_parameter_debug {
 
 /// Feature parameters is a collection of parameters of a feature (ha!).
 #[repr(transparent)]
-pub struct FeatureParameters(pub(crate) *mut nvngx_sys::NVSDK_NGX_Parameter);
+pub struct FeatureParameters(pub/*(crate)*/ *mut nvngx_sys::NVSDK_NGX_Parameter);
 
 impl std::fmt::Debug for FeatureParameters {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -472,7 +472,7 @@ pub struct Feature {
     /// The feature handle.
     pub handle: Rc<FeatureHandle>,
     /// The type of the feature.
-    pub feature_type: nvngx_sys::NVSDK_NGX_Feature,
+    pub feature_type: NVSDK_NGX_Feature,
     /// The parameters of the feature.
     pub parameters: Rc<FeatureParameters>,
 }
@@ -482,7 +482,7 @@ impl Feature {
     pub fn new(
         device: vk::Device,
         command_buffer: vk::CommandBuffer,
-        feature_type: nvngx_sys::NVSDK_NGX_Feature,
+        feature_type: NVSDK_NGX_Feature,
         parameters: FeatureParameters,
     ) -> Result<Self> {
         let mut handle = FeatureHandle::new();
@@ -665,6 +665,8 @@ impl Feature {
         }
         .into()
     }
+
+
 }
 
 unsafe extern "C" fn feature_progress_callback(progress: f32, _should_cancel: *mut bool) {

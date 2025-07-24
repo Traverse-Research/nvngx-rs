@@ -19,14 +19,14 @@ pub struct SuperSamplingOptimalSettings {
     /// The render height which the renderer must render to before
     /// upscaling.
     pub render_height: u32,
-    /// The target width desired, to which the SuperSampling feature
-    /// will upscale to.
-    pub target_width: u32,
-    /// The target height desired, to which the SuperSampling feature
-    /// will upscale to.
-    pub target_height: u32,
-    /// The requested quality level.
-    pub desired_quality_level: nvngx_sys::NVSDK_NGX_PerfQuality_Value,
+    // /// The target width desired, to which the SuperSampling feature
+    // /// will upscale to.
+    // pub target_width: u32,
+    // /// The target height desired, to which the SuperSampling feature
+    // /// will upscale to.
+    // pub target_height: u32,
+    // /// The requested quality level.
+    // pub desired_quality_level: NVSDK_NGX_PerfQuality_Value,
     /// TODO:
     pub dynamic_min_render_width: u32,
     /// TODO:
@@ -41,39 +41,31 @@ impl SuperSamplingOptimalSettings {
     /// Returns a set of optimal settings for the desired parameter
     /// set, render dimensions and quality level.
     pub fn get_optimal_settings(
-        parameters: &FeatureParameters,
+        parameters: *mut nvngx_sys::NVSDK_NGX_Parameter,
         target_width: u32,
         target_height: u32,
-        desired_quality_level: nvngx_sys::NVSDK_NGX_PerfQuality_Value,
+        desired_quality_level: NVSDK_NGX_PerfQuality_Value,
     ) -> Result<Self> {
-        let mut settings = Self {
-            render_width: 0,
-            render_height: 0,
-            target_width,
-            target_height,
-            desired_quality_level,
-            dynamic_min_render_width: 0,
-            dynamic_max_render_width: 0,
-            dynamic_min_render_height: 0,
-            dynamic_max_render_height: 0,
-        };
+        let mut settings: Self = unsafe { std::mem::zeroed() };
         // The sharpness is deprecated, should stay zero.
         let mut sharpness = 0.0f32;
         Result::from(unsafe {
             nvngx_sys::HELPERS_NGX_DLSS_GET_OPTIMAL_SETTINGS(
-                parameters.0,
-                settings.target_width,
-                settings.target_height,
-                settings.desired_quality_level,
-                &mut settings.render_width as *mut _,
-                &mut settings.render_height as *mut _,
-                &mut settings.dynamic_max_render_width as *mut _,
-                &mut settings.dynamic_max_render_height as *mut _,
-                &mut settings.dynamic_min_render_width as *mut _,
-                &mut settings.dynamic_min_render_height as *mut _,
+                parameters,
+                target_width,
+                target_height,
+                desired_quality_level,
+                &mut settings.render_width,
+                &mut settings.render_height,
+                &mut settings.dynamic_max_render_width,
+                &mut settings.dynamic_max_render_height,
+                &mut settings.dynamic_min_render_width,
+                &mut settings.dynamic_min_render_height,
                 &mut sharpness as *mut _,
             )
         })?;
+
+        dbg!(&settings);
 
         if settings.render_height == 0 || settings.render_width == 0 {
             return Err(nvngx_sys::Error::Other(format!(
@@ -88,7 +80,7 @@ impl SuperSamplingOptimalSettings {
 /// Create parameters for the SuperSampling feature.
 #[repr(transparent)]
 #[derive(Debug)]
-pub struct SuperSamplingCreateParameters(pub(crate) nvngx_sys::NVSDK_NGX_DLSS_Create_Params);
+pub struct SuperSamplingCreateParameters(pub(crate) NVSDK_NGX_DLSS_Create_Params);
 
 impl SuperSamplingCreateParameters {
     /// Creates a new set of create parameters for the SuperSampling
@@ -112,16 +104,20 @@ impl SuperSamplingCreateParameters {
         params.InFeatureCreateFlags = flags.map(|f| f.0).unwrap_or(0);
         Self(params)
     }
-}
 
-impl From<SuperSamplingOptimalSettings> for SuperSamplingCreateParameters {
-    fn from(value: SuperSamplingOptimalSettings) -> Self {
+    ///
+    pub fn from_settings(
+        target_width: u32,
+        target_height: u32,
+        desired_quality_level: Option<NVSDK_NGX_PerfQuality_Value>,
+        settings: SuperSamplingOptimalSettings,
+    ) -> Self {
         Self::new(
-            value.render_width,
-            value.render_height,
-            value.target_width,
-            value.target_height,
-            Some(value.desired_quality_level),
+            settings.render_width,
+            settings.render_height,
+            target_width,
+            target_height,
+            desired_quality_level,
             Some(
                 NVSDK_NGX_DLSS_Feature_Flags::NVSDK_NGX_DLSS_Feature_Flags_AutoExposure
                     | NVSDK_NGX_DLSS_Feature_Flags::NVSDK_NGX_DLSS_Feature_Flags_MVLowRes,
@@ -129,6 +125,24 @@ impl From<SuperSamplingOptimalSettings> for SuperSamplingCreateParameters {
         )
     }
 }
+
+// impl From<SuperSamplingOptimalSettings> for SuperSamplingCreateParameters {
+//     fn from(value: SuperSamplingOptimalSettings) -> Self {
+//         unsafe {
+//             Self::new(
+//                 value.render_width,
+//                 value.render_height,
+//                 value.target_width,
+//                 value.target_height,
+//                 Some(value.desired_quality_level),
+//                 Some(
+//                     NVSDK_NGX_DLSS_Feature_Flags::NVSDK_NGX_DLSS_Feature_Flags_AutoExposure
+//                         | NVSDK_NGX_DLSS_Feature_Flags::NVSDK_NGX_DLSS_Feature_Flags_MVLowRes,
+//                 ),
+//             )
+//         }
+//     }
+// }
 
 // /// Only mandatory parameters for the SuperSampling feature evaluation.
 // #[derive(Debug, derive_builder::Builder)]
@@ -268,9 +282,7 @@ impl SuperSamplingEvaluationParameters {
     }
 
     /// Returns the filled DLSS parameters.
-    pub(crate) fn get_dlss_evaluation_parameters(
-        &mut self,
-    ) -> *mut nvngx_sys::NVSDK_NGX_VK_DLSS_Eval_Params {
+    pub(crate) fn get_dlss_evaluation_parameters(&mut self) -> *mut NVSDK_NGX_VK_DLSS_Eval_Params {
         std::ptr::addr_of_mut!(self.parameters)
     }
 

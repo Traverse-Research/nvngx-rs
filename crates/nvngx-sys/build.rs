@@ -93,7 +93,7 @@ fn compile_vk_headers() {
 }
 
 fn windows_mt_suffix() -> &'static str {
-    let target_features = std::env::var("CARGO_CFG_TARGET_FEATURE").unwrap();
+    let target_features = env::var("CARGO_CFG_TARGET_FEATURE").unwrap();
     // TODO: + prefix?
     if target_features.contains("crt-static") {
         "_s"
@@ -104,7 +104,7 @@ fn windows_mt_suffix() -> &'static str {
 
 fn link_libs() {
     let manifest_dir = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()); // Gets location of the toml file
-    let target_os = std::env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
     let dlss_library_path = match target_os.as_str() {
         "windows" => manifest_dir.join("DLSS/lib/Windows_x86_64"),
         "linux" => manifest_dir.join("DLSS/lib/Linux_x86_64"),

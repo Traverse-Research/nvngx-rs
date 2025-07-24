@@ -7,25 +7,26 @@ use nvngx_sys::{
 
 use super::*;
 
-impl From<SuperSamplingOptimalSettings> for RayReconstructionCreateParameters {
-    fn from(value: SuperSamplingOptimalSettings) -> Self {
-        Self::new(
-            value.render_width,
-            value.render_height,
-            value.target_width,
-            value.target_height,
-            Some(value.desired_quality_level),
-            None,
-            None,
-            None,
-        )
-    }
-}
+// impl From<SuperSamplingOptimalSettings> for RayReconstructionCreateParameters {
+//     fn from(value: SuperSamplingOptimalSettings) -> Self {
+
+//         Self::new(
+//             value.render_width,
+//             value.render_height,
+//             value.target_width,
+//             value.target_height,
+//             Some(value.desired_quality_level),
+//             None,
+//             None,
+//             None,
+//         )
+//     }
+// }
 
 /// Create parameters for the Ray Reconstruction feature.
 #[repr(transparent)]
 #[derive(Debug)]
-pub struct RayReconstructionCreateParameters(pub(crate) nvngx_sys::NVSDK_NGX_DLSSD_Create_Params);
+pub struct RayReconstructionCreateParameters(pub(crate) NVSDK_NGX_DLSSD_Create_Params);
 
 impl RayReconstructionCreateParameters {
     /// Creates a new set of create parameters for the SuperSampling
@@ -174,7 +175,7 @@ impl RayReconstructionEvaluationParameters {
     /// Returns the filled Ray Reconstruction parameters.
     pub(crate) fn get_rr_evaluation_parameters(
         &mut self,
-    ) -> *mut nvngx_sys::NVSDK_NGX_VK_DLSSD_Eval_Params {
+    ) -> *mut NVSDK_NGX_VK_DLSSD_Eval_Params {
         std::ptr::addr_of_mut!(self.parameters)
     }
 

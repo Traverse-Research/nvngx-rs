@@ -98,6 +98,8 @@ pub struct System {
 }
 
 impl System {
+
+
     /// Creates a new NVIDIA NGX system.
     pub fn new(
         project_id: Option<uuid::Uuid>,
@@ -133,10 +135,12 @@ impl System {
                 std::ptr::null(),
                 nvngx_sys::NVSDK_NGX_Version::NVSDK_NGX_Version_API,
             )
-        })
-        .map(|_| Self {
-            device: logical_device,
-        })
+        })?;
+
+        Ok(Self { device: logical_device})
+        // .map(|_| Self {
+            // device: logical_device,
+        // })
     }
 
     fn shutdown(&self) -> Result {
@@ -148,7 +152,7 @@ impl System {
     pub fn create_feature(
         &self,
         command_buffer: vk::CommandBuffer,
-        feature_type: nvngx_sys::NVSDK_NGX_Feature,
+        feature_type: NVSDK_NGX_Feature,
         parameters: Option<FeatureParameters>,
     ) -> Result<Feature> {
         let parameters = match parameters {
