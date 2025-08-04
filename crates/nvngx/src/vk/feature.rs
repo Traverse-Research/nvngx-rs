@@ -20,7 +20,7 @@ impl FeatureHandle {
 
     // TODO: This should be unsafe, take Self (and write self.0=null()), or inlined into drop().
     fn release(&mut self) -> Result {
-        unsafe { nvngx_sys::NVSDK_NGX_VULKAN_ReleaseFeature(self.0) }.into()
+        unsafe { nvngx_sys::vulkan::NVSDK_NGX_VULKAN_ReleaseFeature(self.0) }.into()
     }
 }
 
@@ -100,7 +100,7 @@ macro_rules! insert_parameter_debug {
 
 /// Feature parameters is a collection of parameters of a feature (ha!).
 #[repr(transparent)]
-pub struct FeatureParameters(pub/*(crate)*/ *mut nvngx_sys::NVSDK_NGX_Parameter);
+pub struct FeatureParameters(pub *mut nvngx_sys::NVSDK_NGX_Parameter);
 
 impl std::fmt::Debug for FeatureParameters {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -220,8 +220,10 @@ impl FeatureParameters {
     /// This function may only be called after a successful call into NVSDK_NGX_Init.
     pub fn new(&self) -> Result<Self> {
         let mut ptr: *mut nvngx_sys::NVSDK_NGX_Parameter = std::ptr::null_mut();
-        Result::from(unsafe { nvngx_sys::NVSDK_NGX_VULKAN_AllocateParameters(&mut ptr as *mut _) })
-            .map(|_| Self(ptr))
+        Result::from(unsafe {
+            nvngx_sys::vulkan::NVSDK_NGX_VULKAN_AllocateParameters(&mut ptr as *mut _)
+        })
+        .map(|_| Self(ptr))
     }
 
     /// Get a feature parameter set populated with NGX and feature
@@ -250,7 +252,7 @@ impl FeatureParameters {
     pub fn get_capability_parameters() -> Result<Self> {
         let mut ptr: *mut nvngx_sys::NVSDK_NGX_Parameter = std::ptr::null_mut();
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_GetCapabilityParameters(&mut ptr as *mut _)
+            nvngx_sys::vulkan::NVSDK_NGX_VULKAN_GetCapabilityParameters(&mut ptr as *mut _)
         })
         .map(|_| Self(ptr))
     }
@@ -451,7 +453,7 @@ impl FeatureParameters {
 
     /// Deallocates the feature parameter set.
     fn release(&self) -> Result {
-        unsafe { nvngx_sys::NVSDK_NGX_VULKAN_DestroyParameters(self.0) }.into()
+        unsafe { nvngx_sys::vulkan::NVSDK_NGX_VULKAN_DestroyParameters(self.0) }.into()
     }
 }
 
@@ -487,7 +489,7 @@ impl Feature {
     ) -> Result<Self> {
         let mut handle = FeatureHandle::new();
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_CreateFeature1(
+            nvngx_sys::vulkan::NVSDK_NGX_VULKAN_CreateFeature1(
                 device,
                 command_buffer,
                 feature_type,
@@ -518,7 +520,7 @@ impl Feature {
             .height(super_sampling_create_parameters.0.Feature.InTargetHeight);
         unsafe {
             let mut handle = FeatureHandle::new();
-            Result::from(nvngx_sys::HELPERS_NGX_VULKAN_CREATE_DLSS_EXT1(
+            Result::from(nvngx_sys::vulkan::HELPERS_NGX_VULKAN_CREATE_DLSS_EXT1(
                 device,
                 command_buffer,
                 1,
@@ -568,7 +570,7 @@ impl Feature {
 
         unsafe {
             let mut handle = FeatureHandle::new();
-            Result::from(nvngx_sys::HELPERS_NGX_VULKAN_CREATE_DLSSD_EXT1(
+            Result::from(nvngx_sys::vulkan::HELPERS_NGX_VULKAN_CREATE_DLSSD_EXT1(
                 device,
                 command_buffer,
                 1,
@@ -636,7 +638,7 @@ impl Feature {
     pub fn get_scratch_buffer_size(&self) -> Result<usize> {
         let mut size = 0usize;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_GetScratchBufferSize(
+            nvngx_sys::vulkan::NVSDK_NGX_VULKAN_GetScratchBufferSize(
                 self.feature_type,
                 self.parameters.0 as _,
                 &mut size as *mut _,
@@ -656,7 +658,7 @@ impl Feature {
     /// albedo, normals, depth etc)
     pub fn evaluate(&self, command_buffer: vk::CommandBuffer) -> Result {
         unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_EvaluateFeature_C(
+            nvngx_sys::vulkan::NVSDK_NGX_VULKAN_EvaluateFeature_C(
                 command_buffer,
                 self.handle.0,
                 self.parameters.0,
@@ -665,8 +667,6 @@ impl Feature {
         }
         .into()
     }
-
-
 }
 
 unsafe extern "C" fn feature_progress_callback(progress: f32, _should_cancel: *mut bool) {

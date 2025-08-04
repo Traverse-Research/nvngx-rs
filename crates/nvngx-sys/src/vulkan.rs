@@ -4,6 +4,7 @@
 #![allow(unsafe_op_in_unsafe_fn)]
 #![cfg(feature = "vk")]
 
+use super::ngx::*;
 use ash::vk::{
     Buffer as VkBuffer, CommandBuffer as VkCommandBuffer, Device as VkDevice,
     ExtensionProperties as VkExtensionProperties, Format as VkFormat, Image as VkImage,

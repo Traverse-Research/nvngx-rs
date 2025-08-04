@@ -31,7 +31,7 @@ ash = { version = "0.38", optional = true }
 windows = { version = "0.61", features = ["Win32_Graphics_Direct3D12", "Win32_Graphics_Dxgi_Common"], optional = true }
 
 [features]
-default = ["rel", "dx", "vk"]
+default = ["rel", "vk"]
 vk = ["dep:ash"]
 dx = ["dep:windows"]
 dev = []

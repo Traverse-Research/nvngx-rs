@@ -1,8 +1,8 @@
 //! The Ray Reconstruction feature.
 
 use nvngx_sys::{
-    NVSDK_NGX_DLSSD_Create_Params, NVSDK_NGX_DLSS_Denoise_Mode, NVSDK_NGX_DLSS_Depth_Type,
-    NVSDK_NGX_DLSS_Roughness_Mode, NVSDK_NGX_VK_DLSSD_Eval_Params,
+    vulkan::NVSDK_NGX_VK_DLSSD_Eval_Params, NVSDK_NGX_DLSSD_Create_Params,
+    NVSDK_NGX_DLSS_Denoise_Mode, NVSDK_NGX_DLSS_Depth_Type, NVSDK_NGX_DLSS_Roughness_Mode,
 };
 
 use super::*;
@@ -173,9 +173,7 @@ impl RayReconstructionEvaluationParameters {
     }
 
     /// Returns the filled Ray Reconstruction parameters.
-    pub(crate) fn get_rr_evaluation_parameters(
-        &mut self,
-    ) -> *mut NVSDK_NGX_VK_DLSSD_Eval_Params {
+    pub(crate) fn get_rr_evaluation_parameters(&mut self) -> *mut NVSDK_NGX_VK_DLSSD_Eval_Params {
         std::ptr::addr_of_mut!(self.parameters)
     }
 
@@ -277,7 +275,7 @@ impl RayReconstructionFeature {
     /// Evaluates the feature.
     pub fn evaluate(&mut self, command_buffer: vk::CommandBuffer) -> Result {
         Result::from(unsafe {
-            nvngx_sys::HELPERS_NGX_VULKAN_EVALUATE_DLSSD_EXT(
+            nvngx_sys::vulkan::HELPERS_NGX_VULKAN_EVALUATE_DLSSD_EXT(
                 command_buffer,
                 self.feature.handle.0,
                 self.feature.parameters.0,

@@ -39,10 +39,11 @@ fn main() {
 
     #[cfg(feature = "generate-bindings")]
     {
+        compile_general();
         #[cfg(feature = "dx")]
-        compile_dx_headers();
+        compile_dx();
         #[cfg(feature = "vk")]
-        compile_vk_headers();
+        compile_vk();
     }
 }
 
@@ -60,22 +61,11 @@ fn generate_bindings(header: &str) -> bindgen::Builder {
         // The input header we would like to generate
         // bindings for.
         .header(header)
-        //.allowlist_function("NVSDK_NGX_.*")
-        .allowlist_function(".*NGX.*")
-        .allowlist_type("(PFN_)?NVSDK_NGX_.*")
-        .allowlist_var("NVSDK_NGX_.*")
-        .blocklist_item(".*D3[dD]11.*")
-        .blocklist_item(".*CUDA.*")
+        // Disallow all other dependencies, like those from libc or Vulkan.
         .allowlist_recursively(false)
         // Tell cargo to invalidate the built crate whenever any of the
         // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
-        // Types and functions defined by the SDK:
-        .allowlist_item("NVSDK_NGX_\\w+")
-        // Single exception for a function that doesn't adhere to the naming standard:
-        .allowlist_function("GetNGXResultAsString")
-        // Exportable symbols defined by our `bindings.c/h`, wrapping `static inline` helpers
-        .allowlist_function("HELPERS_NGX_\\w+")
         // Platform-specific type provided by libc
         .blocklist_type("wchar_t")
         .impl_debug(true)
@@ -90,26 +80,9 @@ fn generate_bindings(header: &str) -> bindgen::Builder {
         })
 }
 
-//         });
-
-//     if let Some(vulkan_sdk) = vulkan_sdk() {
-//         bindings = bindings.clang_arg(format!("-I{}", vulkan_sdk.join("include").display()))
-//     }
-
-//     // Write the bindings to the $OUT_DIR/bindings.rs file.
-//     let out_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("src");
-//     bindings
-//         // Finish the builder and generate the bindings.
-//         .generate()
-//         // Unwrap the Result and panic on failure.
-//         .expect("Unable to generate bindings")
-//         .write_to_file(out_path.join("bindings.rs"))
-//         .expect("Couldn't write bindings!");
-// }
-
 #[cfg(feature = "dx")]
-fn compile_dx_headers() {
-    const SOURCE_FILE_PATH: &str = "src/dx_source.c";
+fn compile_dx() {
+    const SOURCE_FILE_PATH: &str = "src/dx_helpers.c";
     const HEADER_FILE_PATH: &str = "src/dx_wrapper.h";
 
     cc::Build::new()
@@ -147,8 +120,8 @@ fn vulkan_sdk() -> Option<PathBuf> {
 }
 
 #[cfg(feature = "vk")]
-fn compile_vk_headers() {
-    const SOURCE_FILE_PATH: &str = "src/vk_source.c"; // TODO: Rename to vk_helpers
+fn compile_vk() {
+    const SOURCE_FILE_PATH: &str = "src/vk_helpers.c"; // TODO: Rename to vk_helpers
     const HEADER_FILE_PATH: &str = "src/vk_wrapper.h";
 
     let vulkan_sdk = vulkan_sdk();
@@ -164,9 +137,9 @@ fn compile_vk_headers() {
     {
         let out_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("src");
         let mut bindings = generate_bindings(HEADER_FILE_PATH)
-            // Disable Dx12 types
-            .blocklist_type("PFN_NVSDK_NGX_ResourceReleaseCallback")
-            .blocklist_item(".*D3[dD]12.*");
+            .allowlist_function("NVSDK_NGX_VULKAN_.*")
+            .allowlist_function("HELPERS_NGX_VULKAN_.*")
+            .allowlist_type("NVSDK_NGX_.*VK.*");
 
         if let Some(vulkan_sdk) = &vulkan_sdk {
             bindings = bindings.clang_arg(format!("-I{}", vulkan_sdk.join("include").display()));
@@ -181,6 +154,31 @@ fn compile_vk_headers() {
             .write_to_file(out_path.join("vk_bindings.rs"))
             .expect("Couldn't write bindings!");
     }
+}
+
+#[cfg(feature = "generate-bindings")]
+fn compile_general() {
+    const SOURCE: &str = "src/ngx_bindings.c";
+    const HEADER: &str = "src/ngx_bindings.h";
+    let out_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("src");
+
+    cc::Build::new().file(SOURCE).compile("ngx_bindings");
+    generate_bindings(HEADER)
+        // Types and functions defined by the SDK:
+        .allowlist_item("(PFN_)?NVSDK_NGX_\\w+")
+        // Single exception for a function that doesn't adhere to the naming standard:
+        .allowlist_function("GetNGXResultAsString")
+        // Exportable symbols defined by our `bindings.c/h`, wrapping `static inline` helpers
+        .allowlist_function("HELPERS_NGX_\\w+")
+        // Disallow DirectX and CUDA APIs, for which we do not yet provide/implement bindings
+        .blocklist_item(r"\w+D3[Dd]1[12]\w+")
+        .blocklist_type("PFN_NVSDK_NGX_ResourceReleaseCallback")
+        .blocklist_item(r"\w+CUDA\w+")
+        .blocklist_item(".*VK.*")
+        .generate()
+        .expect("Failed to generate generic bindings")
+        .write_to_file(out_path.join("ngx_bindings.rs"))
+        .expect("Failed to write generic bindings to file");
 }
 
 fn windows_mt_suffix() -> &'static str {

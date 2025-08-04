@@ -4,9 +4,12 @@ use std::rc::Rc;
 
 use ash::vk;
 use nvngx_sys::{
-    NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions, NVSDK_NGX_Feature, NVSDK_NGX_ImageViewInfo_VK,
-    NVSDK_NGX_PerfQuality_Value, NVSDK_NGX_Resource_VK, NVSDK_NGX_Resource_VK_Type,
-    NVSDK_NGX_Resource_VK__bindgen_ty_1, NVSDK_NGX_VULKAN_DestroyParameters, Result,
+    vulkan::{
+        NVSDK_NGX_ImageViewInfo_VK, NVSDK_NGX_Resource_VK, NVSDK_NGX_Resource_VK_Type,
+        NVSDK_NGX_Resource_VK__bindgen_ty_1, NVSDK_NGX_VULKAN_DestroyParameters,
+    },
+    NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions, NVSDK_NGX_Feature, NVSDK_NGX_PerfQuality_Value,
+    Result,
 };
 
 pub mod feature;
@@ -53,7 +56,7 @@ impl RequiredExtensions {
         let mut instance_count = 0u32;
         let mut device_count = 0u32;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_RequiredExtensions(
+            nvngx_sys::vulkan::NVSDK_NGX_VULKAN_RequiredExtensions(
                 &mut instance_count as *mut _,
                 &mut instance_extensions as *mut _,
                 &mut device_count as *mut _,
@@ -117,7 +120,7 @@ impl System {
             widestring::WideString::from_str(application_data_path.to_str().unwrap());
         #[allow(clippy::missing_transmute_annotations)] // Transmutes will be removed soon again"
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_Init_with_ProjectID(
+            nvngx_sys::vulkan::NVSDK_NGX_VULKAN_Init_with_ProjectID(
                 project_id.as_ptr(),
                 engine_type,
                 engine_version.as_ptr(),
@@ -138,7 +141,7 @@ impl System {
     }
 
     fn shutdown(&self) -> Result {
-        unsafe { nvngx_sys::NVSDK_NGX_VULKAN_Shutdown1(self.device) }.into()
+        unsafe { nvngx_sys::vulkan::NVSDK_NGX_VULKAN_Shutdown1(self.device) }.into()
     }
 
     /// Creates a new [`Feature`] with the logical device used to create

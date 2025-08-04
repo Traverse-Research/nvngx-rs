@@ -1,7 +1,8 @@
 //! Describes and implements the interface for the DLSS feature.
 
 use nvngx_sys::{
-    NVSDK_NGX_DLSS_Create_Params, NVSDK_NGX_DLSS_Feature_Flags, NVSDK_NGX_VK_DLSS_Eval_Params,
+    vulkan::NVSDK_NGX_VK_DLSS_Eval_Params, NVSDK_NGX_DLSS_Create_Params,
+    NVSDK_NGX_DLSS_Feature_Flags,
 };
 
 use super::*;
@@ -367,7 +368,7 @@ impl SuperSamplingFeature {
 
     /// get feature handle
     pub fn get_feature_handle(&self) -> *mut nvngx_sys::NVSDK_NGX_Handle {
-       self.feature.handle.0
+        self.feature.handle.0
     }
 
     /// See [`FeatureParameters::is_super_sampling_initialised`].
@@ -385,7 +386,7 @@ impl SuperSamplingFeature {
     /// Evaluates the feature.
     pub fn evaluate(&mut self, command_buffer: vk::CommandBuffer) -> Result {
         Result::from(unsafe {
-            nvngx_sys::HELPERS_NGX_VULKAN_EVALUATE_DLSS_EXT(
+            nvngx_sys::vulkan::HELPERS_NGX_VULKAN_EVALUATE_DLSS_EXT(
                 command_buffer,
                 self.feature.handle.0,
                 self.feature.parameters.0,

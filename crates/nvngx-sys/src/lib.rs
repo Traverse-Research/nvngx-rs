@@ -5,15 +5,15 @@
 #![allow(non_snake_case)]
 #![allow(clippy::all)]
 
-// use libc::wchar_t;
-
-// include!("bindings.rs");
+mod ngx {
+    use libc::wchar_t;
+    include!("ngx_bindings.rs");
+}
+pub use ngx::*;
 
 pub mod error;
 pub use error::*;
 
 pub mod vulkan;
-pub use vulkan::*;
 
 // pub mod directx;
-// pub use directx::*;
