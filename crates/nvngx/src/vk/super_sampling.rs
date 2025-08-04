@@ -25,8 +25,8 @@ pub struct SuperSamplingOptimalSettings {
     // /// The target height desired, to which the SuperSampling feature
     // /// will upscale to.
     // pub target_height: u32,
-    // /// The requested quality level.
-    // pub desired_quality_level: NVSDK_NGX_PerfQuality_Value,
+    /// The requested quality level.
+    pub desired_quality_level: NVSDK_NGX_PerfQuality_Value,
     /// TODO:
     pub dynamic_min_render_width: u32,
     /// TODO:
@@ -47,6 +47,7 @@ impl SuperSamplingOptimalSettings {
         desired_quality_level: NVSDK_NGX_PerfQuality_Value,
     ) -> Result<Self> {
         let mut settings: Self = unsafe { std::mem::zeroed() };
+        settings.desired_quality_level = desired_quality_level;
         // The sharpness is deprecated, should stay zero.
         let mut sharpness = 0.0f32;
         Result::from(unsafe {
@@ -64,8 +65,6 @@ impl SuperSamplingOptimalSettings {
                 &mut sharpness as *mut _,
             )
         })?;
-
-        dbg!(&settings);
 
         if settings.render_height == 0 || settings.render_width == 0 {
             return Err(nvngx_sys::Error::Other(format!(
@@ -365,6 +364,11 @@ impl SuperSamplingFeature {
     //     let parameters = FeatureParameters::get_capability_parameters()?;
     //     Self::new(parameters)
     // }
+
+    /// get feature handle
+    pub fn get_feature_handle(&self) -> *mut nvngx_sys::NVSDK_NGX_Handle {
+       self.feature.handle.0
+    }
 
     /// See [`FeatureParameters::is_super_sampling_initialised`].
     pub fn is_initialised(&self) -> bool {
