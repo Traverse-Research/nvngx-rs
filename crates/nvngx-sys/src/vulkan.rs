@@ -12,5 +12,4 @@ use ash::vk::{
     PhysicalDevice as VkPhysicalDevice,
 };
 use libc::wchar_t;
-use windows::core::IUnknown;
-include!(concat!(env!("OUT_DIR"), "/vk_bindings.rs"));
+include!("vk_bindings.rs");

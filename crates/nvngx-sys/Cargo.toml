@@ -7,27 +7,24 @@ description = "NVIDIA NGX raw bindings."
 readme = "README.md"
 license = "MIT"
 keywords = ["nvidia", "ngx", "DLSS", "upscaling", "supersampling"]
-rust-version = "1.57"
+rust-version = "1.70"
 repository = "https://github.com/iddm/nvngx-rs"
 
 include = [
-    # "DLSS/lib/Windows_x86_64/{x64,dev,rel}/",
-    # TODO: This crate doesn't embed the runtime libraries (.dll/.so)?
-    "DLSS/lib/Windows_x86_64/{x64}/",
-    "DLSS/lib/Linux_x86_64/libnvsdk_ngx.a",
-    "DLSS/include/",
-    "src/",
-    "build.rs",
+    "/DLSS/lib/Windows_x86_64/x64/", # TODO: Skip _dbg variant?
+    "/DLSS/lib/Linux_x86_64/libnvsdk_ngx.a",
+    "/DLSS/include/",
+    "/src/",
+    "/build.rs",
 ]
 
 [build-dependencies]
-bindgen = "0.71"
+bindgen = { version = "0.72", optional = true }
 cc = "1"
 
 [dependencies]
 widestring = "1"
 libc = "0.2"
-# TODO: These are not technically "sys" crates
 ash = { version = "0.38", optional = true }
 
 [target.'cfg(windows)'.dependencies]
@@ -39,3 +36,5 @@ vk = ["dep:ash"]
 dx = ["dep:windows"]
 dev = []
 rel = []
+# Update generated bindings in the build scripts
+generate-bindings = ["dep:bindgen"]

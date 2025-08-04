@@ -4,7 +4,9 @@ use std::rc::Rc;
 
 use ash::vk;
 use nvngx_sys::{
-    NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions, NVSDK_NGX_Feature, NVSDK_NGX_ImageViewInfo_VK, NVSDK_NGX_PerfQuality_Value, NVSDK_NGX_Resource_VK, NVSDK_NGX_Resource_VK_Type, NVSDK_NGX_Resource_VK__bindgen_ty_1, NVSDK_NGX_VULKAN_DestroyParameters, Result
+    NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions, NVSDK_NGX_Feature, NVSDK_NGX_ImageViewInfo_VK,
+    NVSDK_NGX_PerfQuality_Value, NVSDK_NGX_Resource_VK, NVSDK_NGX_Resource_VK_Type,
+    NVSDK_NGX_Resource_VK__bindgen_ty_1, NVSDK_NGX_VULKAN_DestroyParameters, Result,
 };
 
 pub mod feature;
@@ -96,8 +98,6 @@ pub struct System {
 }
 
 impl System {
-
-
     /// Creates a new NVIDIA NGX system.
     pub fn new(
         project_id: Option<uuid::Uuid>,
@@ -108,10 +108,6 @@ impl System {
         physical_device: vk::PhysicalDevice,
         logical_device: vk::Device,
     ) -> Result<Self> {
-        // unsafe {
-        // ASH_ENTRY = Some(ManuallyDrop::new(entry.clone()));
-        // ASH_INSTANCE = Some(ManuallyDrop::new(instance.clone()));
-        // }
         let engine_type = nvngx_sys::NVSDK_NGX_EngineType::NVSDK_NGX_ENGINE_TYPE_CUSTOM;
         let project_id =
             std::ffi::CString::new(project_id.unwrap_or_else(uuid::Uuid::new_v4).to_string())
@@ -119,6 +115,7 @@ impl System {
         let engine_version = std::ffi::CString::new(engine_version).unwrap();
         let application_data_path =
             widestring::WideString::from_str(application_data_path.to_str().unwrap());
+        #[allow(clippy::missing_transmute_annotations)] // Transmutes will be removed soon again"
         Result::from(unsafe {
             nvngx_sys::NVSDK_NGX_VULKAN_Init_with_ProjectID(
                 project_id.as_ptr(),
@@ -135,10 +132,9 @@ impl System {
             )
         })?;
 
-        Ok(Self { device: logical_device})
-        // .map(|_| Self {
-            // device: logical_device,
-        // })
+        Ok(Self {
+            device: logical_device,
+        })
     }
 
     fn shutdown(&self) -> Result {

@@ -1,9 +1,9 @@
 [![CI](https://github.com/iddm/nvngx-rs/actions/workflows/ci.yml/badge.svg)](https://github.com/iddm/nvngx-rs/actions/workflows/ci.yml)
-[![Crates](https://img.shields.io/crates/v/nvngx-rs.svg)](https://crates.io/crates/nvngx)
-[![Docs](https://docs.rs/nvngx-rs/badge.svg)](https://docs.rs/nvngx)
+[![Crates](https://img.shields.io/crates/v/nvngx.svg)](https://crates.io/crates/nvngx)
+[![Docs](https://docs.rs/nvngx/badge.svg)](https://docs.rs/nvngx)
 [![MIT licensed](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)
 
-# NGX-rs
+# nvngx
 
 A Rust wrapper over the NVIDIA NGX library.
 
@@ -16,10 +16,11 @@ The DLSS version used by this crate: [`3.10.1.0`](https://github.com/NVIDIA/DLSS
 
 ## Supported graphics APIs
 
-- Vulkan (only the [`ash`](https://crates.io/crates/ash) backend).
+- Vulkan (via [`ash`](https://crates.io/crates/ash) bindings).
+- Direct3D12 (via [`windows-rs](https://crates.io/crates/windows) bindings)
 
 ## MSRV
-1.65
+1.70
 
 ## DLSS integration example
 
