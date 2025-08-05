@@ -5,7 +5,7 @@
 
 use widestring::WideChar as wchar_t;
 use windows::Win32::Graphics::Direct3D12::*;
-use windows::core::IUnknown;
+// use windows::core::IUnknown;
 use windows::Win32::Graphics::Dxgi::IDXGIAdapter;
 
 // helper struct for initialization. Should be ABI compatible

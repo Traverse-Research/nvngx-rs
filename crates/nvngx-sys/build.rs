@@ -93,6 +93,9 @@ fn compile_dx() {
     {
         let out_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("src");
         generate_bindings(HEADER_FILE_PATH)
+            .allowlist_item(r"\w+D3[Dd]12\w+")
+            .allowlist_function("NVSDK_NGX_D3[Dd]12_.*")
+            .allowlist_item("NGX_D3[Dd]12.*")
             .generate()
             // Unwrap the Result and panic on failure.
             .expect("Unable to generate bindings")

@@ -16,4 +16,4 @@ pub use error::*;
 
 pub mod vulkan;
 
-// pub mod directx;
+pub mod directx;
