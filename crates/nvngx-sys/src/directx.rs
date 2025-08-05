@@ -12,4 +12,5 @@ use windows::Win32::Graphics::Dxgi::IDXGIAdapter;
 // https://learn.microsoft.com/en-us/windows/win32/direct3d12/cd3dx12-heap-properties
 type CD3DX12_HEAP_PROPERTIES = D3D12_HEAP_PROPERTIES;
 
+use super::ngx::*;
 include!("dx_bindings.rs");
