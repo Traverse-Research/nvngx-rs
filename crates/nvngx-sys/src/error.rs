@@ -25,6 +25,8 @@ impl std::fmt::Display for Error {
     }
 }
 
+impl std::error::Error for Error {}
+
 impl From<bindings::NVSDK_NGX_Result> for Error {
     fn from(value: bindings::NVSDK_NGX_Result) -> Self {
         Self::Internal(value)
