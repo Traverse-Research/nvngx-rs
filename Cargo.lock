@@ -13,7 +13,7 @@ dependencies = [
 
 [[package]]
 name = "api_gen"
-version = "0.3.1+v310.1.0"
+version = "0.0.0"
 dependencies = [
  "bindgen",
 ]
@@ -236,7 +236,7 @@ dependencies = [
 
 [[package]]
 name = "nvngx"
-version = "0.3.1+v310.1.0"
+version = "0.3.1+v310.5.3"
 dependencies = [
  "ash",
  "derive_builder",
@@ -249,7 +249,7 @@ dependencies = [
 
 [[package]]
 name = "nvngx-sys"
-version = "0.3.1+v310.1.0"
+version = "0.3.1+v310.5.3"
 dependencies = [
  "ash",
  "libc",

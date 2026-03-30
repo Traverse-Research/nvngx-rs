@@ -604,8 +604,10 @@ pub unsafe fn vulkan_evaluate_dlssd_ext(
     }
 
     ensure!(p.pInColor);
+    ensure!(p.pInAlpha);
     ensure!(p.pInMotionVectors);
     ensure!(p.pInOutput);
+    ensure!(p.pInOutputAlpha);
     ensure!(p.pInDepth);
     ensure!(p.pInDiffuseAlbedo);
     ensure!(p.pInSpecularAlbedo);
@@ -911,6 +913,8 @@ pub unsafe fn vulkan_evaluate_dlssd_ext(
         p.InRoughnessSubrectBase.Y
     );
 
+    set_ptr!(NVSDK_NGX_Parameter_DLSSD_Alpha, p.pInAlpha);
+    set_ptr!(NVSDK_NGX_Parameter_DLSSD_OutputAlpha, p.pInOutputAlpha);
     set_ptr!(
         NVSDK_NGX_Parameter_DLSSD_ReflectedAlbedo,
         p.pInReflectedAlbedo
@@ -995,6 +999,22 @@ pub unsafe fn vulkan_evaluate_dlssd_ext(
     set_ptr!(
         NVSDK_NGX_Parameter_DLSSD_SpecularRayDirectionHitDistance,
         p.pInSpecularRayDirectionHitDistance
+    );
+    set_ui!(
+        NVSDK_NGX_Parameter_DLSSD_Alpha_Subrect_Base_X,
+        p.InAlphaSubrectBase.X
+    );
+    set_ui!(
+        NVSDK_NGX_Parameter_DLSSD_Alpha_Subrect_Base_Y,
+        p.InAlphaSubrectBase.Y
+    );
+    set_ui!(
+        NVSDK_NGX_Parameter_DLSSD_OutputAlpha_Subrect_Base_X,
+        p.InOutputAlphaSubrectBase.X
+    );
+    set_ui!(
+        NVSDK_NGX_Parameter_DLSSD_OutputAlpha_Subrect_Base_Y,
+        p.InOutputAlphaSubrectBase.Y
     );
     set_ui!(
         NVSDK_NGX_Parameter_DLSSD_ReflectedAlbedo_Subrect_Base_X,
