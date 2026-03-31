@@ -60,7 +60,7 @@ impl SuperSamplingOptimalSettings {
         // The sharpness is deprecated, should stay zero.
         let mut sharpness = 0.0f32;
         Result::from(unsafe {
-            nvngx_sys::HELPERS_NGX_DLSS_GET_OPTIMAL_SETTINGS(
+            nvngx_sys::helpers::dlss_get_optimal_settings(
                 parameters.0,
                 settings.target_width,
                 settings.target_height,
@@ -369,7 +369,7 @@ impl SuperSamplingFeature {
     /// Evaluates the feature.
     pub fn evaluate(&mut self, command_buffer: vk::CommandBuffer) -> Result {
         Result::from(unsafe {
-            nvngx_sys::HELPERS_NGX_VULKAN_EVALUATE_DLSS_EXT(
+            nvngx_sys::helpers::vulkan_evaluate_dlss_ext(
                 command_buffer,
                 self.feature.handle.0,
                 self.feature.parameters.0,
