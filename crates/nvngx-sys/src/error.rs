@@ -16,12 +16,10 @@ pub enum Error {
 
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_str(&match self {
-            Self::Internal(code) => {
-                format!("Internal error: code={code}")
-            }
-            Self::Other(s) => format!("Other error: {s}"),
-        })
+        match self {
+            Self::Internal(code) => write!(f, "Internal error: code={code:?}"),
+            Self::Other(s) => write!(f, "Other error: {s}"),
+        }
     }
 }
 
@@ -54,6 +52,7 @@ impl From<bindings::NVSDK_NGX_Result> for Result {
     }
 }
 
+#[cfg(feature = "linked")]
 impl std::fmt::Display for bindings::NVSDK_NGX_Result {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let chars = unsafe { bindings::GetNGXResultAsString(*self as _) };
@@ -62,14 +61,11 @@ impl std::fmt::Display for bindings::NVSDK_NGX_Result {
             .map_err(|_| std::fmt::Error)?;
         let string = string.to_string().map_err(|_| std::fmt::Error)?;
         f.write_str(&string)?;
-        // unsafe {
-        //     libc::free(chars as *mut _);
-        // }
         Ok(())
     }
 }
 
-#[cfg(test)]
+#[cfg(all(test, feature = "linked"))]
 mod tests {
     use crate as bindings;
 

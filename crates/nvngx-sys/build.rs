@@ -1,9 +1,14 @@
-use std::{
-    env,
-    path::{Path, PathBuf},
-};
+use std::env;
+#[cfg(feature = "linked")]
+use std::path::PathBuf;
 
 fn main() {
+    #[cfg(feature = "linked")]
+    link_libraries();
+}
+
+#[cfg(feature = "linked")]
+fn link_libraries() {
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     assert_eq!(
         target_arch, "x86_64",
@@ -12,7 +17,7 @@ fn main() {
 
     // Tell cargo to tell rustc to link to the libraries.
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    let dlss_library_path = Path::new(match target_os.as_str() {
+    let dlss_library_path = std::path::Path::new(match target_os.as_str() {
         "windows" => "DLSS/lib/Windows_x86_64",
         "linux" => "DLSS/lib/Linux_x86_64",
         x => panic!("No libraries available for OS `{x}`"),
@@ -22,7 +27,6 @@ fn main() {
     let dlss_library_path =
         PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join(dlss_library_path);
 
-    // First link our Rust project against the right version of nvsdk_ngx
     match target_os.as_str() {
         "windows" => {
             // TODO: Only one architecture is included (and for vs201x)
@@ -43,6 +47,7 @@ fn main() {
     }
 }
 
+#[cfg(feature = "linked")]
 fn windows_mt_suffix() -> &'static str {
     let target_features = env::var("CARGO_CFG_TARGET_FEATURE").unwrap();
     if target_features.contains("crt-static") {

@@ -1538,13 +1538,6 @@ pub type PFN_NVSDK_NGX_Parameter_SetULL = ::std::option::Option<
         InValue: ::std::os::raw::c_ulonglong,
     ),
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_SetULL(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        InValue: ::std::os::raw::c_ulonglong,
-    );
-}
 pub type PFN_NVSDK_NGX_Parameter_SetF = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1552,13 +1545,6 @@ pub type PFN_NVSDK_NGX_Parameter_SetF = ::std::option::Option<
         InValue: f32,
     ),
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_SetF(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        InValue: f32,
-    );
-}
 pub type PFN_NVSDK_NGX_Parameter_SetD = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1566,13 +1552,6 @@ pub type PFN_NVSDK_NGX_Parameter_SetD = ::std::option::Option<
         InValue: f64,
     ),
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_SetD(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        InValue: f64,
-    );
-}
 pub type PFN_NVSDK_NGX_Parameter_SetUI = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1580,13 +1559,6 @@ pub type PFN_NVSDK_NGX_Parameter_SetUI = ::std::option::Option<
         InValue: ::std::os::raw::c_uint,
     ),
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_SetUI(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        InValue: ::std::os::raw::c_uint,
-    );
-}
 pub type PFN_NVSDK_NGX_Parameter_SetI = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1594,13 +1566,6 @@ pub type PFN_NVSDK_NGX_Parameter_SetI = ::std::option::Option<
         InValue: ::std::os::raw::c_int,
     ),
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_SetI(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        InValue: ::std::os::raw::c_int,
-    );
-}
 pub type PFN_NVSDK_NGX_Parameter_SetVoidPointer = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1608,13 +1573,6 @@ pub type PFN_NVSDK_NGX_Parameter_SetVoidPointer = ::std::option::Option<
         InValue: *mut ::std::os::raw::c_void,
     ),
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_SetVoidPointer(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        InValue: *mut ::std::os::raw::c_void,
-    );
-}
 pub type PFN_NVSDK_NGX_Parameter_GetULL = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1622,13 +1580,6 @@ pub type PFN_NVSDK_NGX_Parameter_GetULL = ::std::option::Option<
         OutValue: *mut ::std::os::raw::c_ulonglong,
     ) -> NVSDK_NGX_Result,
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_GetULL(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        OutValue: *mut ::std::os::raw::c_ulonglong,
-    ) -> NVSDK_NGX_Result;
-}
 pub type PFN_NVSDK_NGX_Parameter_GetF = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1636,13 +1587,6 @@ pub type PFN_NVSDK_NGX_Parameter_GetF = ::std::option::Option<
         OutValue: *mut f32,
     ) -> NVSDK_NGX_Result,
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_GetF(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        OutValue: *mut f32,
-    ) -> NVSDK_NGX_Result;
-}
 pub type PFN_NVSDK_NGX_Parameter_GetD = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1650,13 +1594,6 @@ pub type PFN_NVSDK_NGX_Parameter_GetD = ::std::option::Option<
         OutValue: *mut f64,
     ) -> NVSDK_NGX_Result,
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_GetD(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        OutValue: *mut f64,
-    ) -> NVSDK_NGX_Result;
-}
 pub type PFN_NVSDK_NGX_Parameter_GetUI = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1664,13 +1601,6 @@ pub type PFN_NVSDK_NGX_Parameter_GetUI = ::std::option::Option<
         OutValue: *mut ::std::os::raw::c_uint,
     ) -> NVSDK_NGX_Result,
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_GetUI(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        OutValue: *mut ::std::os::raw::c_uint,
-    ) -> NVSDK_NGX_Result;
-}
 pub type PFN_NVSDK_NGX_Parameter_GetI = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1678,13 +1608,6 @@ pub type PFN_NVSDK_NGX_Parameter_GetI = ::std::option::Option<
         OutValue: *mut ::std::os::raw::c_int,
     ) -> NVSDK_NGX_Result,
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_GetI(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        OutValue: *mut ::std::os::raw::c_int,
-    ) -> NVSDK_NGX_Result;
-}
 pub type PFN_NVSDK_NGX_Parameter_GetVoidPointer = ::std::option::Option<
     unsafe extern "C" fn(
         InParameter: *mut NVSDK_NGX_Parameter,
@@ -1692,13 +1615,6 @@ pub type PFN_NVSDK_NGX_Parameter_GetVoidPointer = ::std::option::Option<
         OutValue: *mut *mut ::std::os::raw::c_void,
     ) -> NVSDK_NGX_Result,
 >;
-extern "C" {
-    pub fn NVSDK_NGX_Parameter_GetVoidPointer(
-        InParameter: *mut NVSDK_NGX_Parameter,
-        InName: *const ::std::os::raw::c_char,
-        OutValue: *mut *mut ::std::os::raw::c_void,
-    ) -> NVSDK_NGX_Result;
-}
 #[repr(C)]
 pub struct NVSDK_NGX_ImageViewInfo_VK {
     pub ImageView: VkImageView,
@@ -1922,130 +1838,8 @@ impl ::std::fmt::Debug for NVSDK_NGX_Resource_VK {
         )
     }
 }
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_RequiredExtensions(
-        OutInstanceExtCount: *mut ::std::os::raw::c_uint,
-        OutInstanceExts: *mut *mut *const ::std::os::raw::c_char,
-        OutDeviceExtCount: *mut ::std::os::raw::c_uint,
-        OutDeviceExts: *mut *mut *const ::std::os::raw::c_char,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_Init(
-        InApplicationId: ::std::os::raw::c_ulonglong,
-        InApplicationDataPath: *const wchar_t,
-        InInstance: VkInstance,
-        InPD: VkPhysicalDevice,
-        InDevice: VkDevice,
-        InGIPA: PFN_vkGetInstanceProcAddr,
-        InGDPA: PFN_vkGetDeviceProcAddr,
-        InFeatureInfo: *const NVSDK_NGX_FeatureCommonInfo,
-        InSDKVersion: NVSDK_NGX_Version,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_Init_with_ProjectID(
-        InProjectId: *const ::std::os::raw::c_char,
-        InEngineType: NVSDK_NGX_EngineType,
-        InEngineVersion: *const ::std::os::raw::c_char,
-        InApplicationDataPath: *const wchar_t,
-        InInstance: VkInstance,
-        InPD: VkPhysicalDevice,
-        InDevice: VkDevice,
-        InGIPA: PFN_vkGetInstanceProcAddr,
-        InGDPA: PFN_vkGetDeviceProcAddr,
-        InFeatureInfo: *const NVSDK_NGX_FeatureCommonInfo,
-        InSDKVersion: NVSDK_NGX_Version,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_Shutdown1(InDevice: VkDevice) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_AllocateParameters(
-        OutParameters: *mut *mut NVSDK_NGX_Parameter,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_GetCapabilityParameters(
-        OutParameters: *mut *mut NVSDK_NGX_Parameter,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_DestroyParameters(
-        InParameters: *mut NVSDK_NGX_Parameter,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_GetScratchBufferSize(
-        InFeatureId: NVSDK_NGX_Feature,
-        InParameters: *const NVSDK_NGX_Parameter,
-        OutSizeInBytes: *mut usize,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_CreateFeature(
-        InCmdBuffer: VkCommandBuffer,
-        InFeatureID: NVSDK_NGX_Feature,
-        InParameters: *mut NVSDK_NGX_Parameter,
-        OutHandle: *mut *mut NVSDK_NGX_Handle,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_CreateFeature1(
-        InDevice: VkDevice,
-        InCmdList: VkCommandBuffer,
-        InFeatureID: NVSDK_NGX_Feature,
-        InParameters: *mut NVSDK_NGX_Parameter,
-        OutHandle: *mut *mut NVSDK_NGX_Handle,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_ReleaseFeature(InHandle: *mut NVSDK_NGX_Handle) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_GetFeatureRequirements(
-        Instance: VkInstance,
-        PhysicalDevice: VkPhysicalDevice,
-        FeatureDiscoveryInfo: *const NVSDK_NGX_FeatureDiscoveryInfo,
-        OutSupported: *mut NVSDK_NGX_FeatureRequirement,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_GetFeatureInstanceExtensionRequirements(
-        FeatureDiscoveryInfo: *const NVSDK_NGX_FeatureDiscoveryInfo,
-        OutExtensionCount: *mut u32,
-        OutExtensionProperties: *mut *mut VkExtensionProperties,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_GetFeatureDeviceExtensionRequirements(
-        Instance: VkInstance,
-        PhysicalDevice: VkPhysicalDevice,
-        FeatureDiscoveryInfo: *const NVSDK_NGX_FeatureDiscoveryInfo,
-        OutExtensionCount: *mut u32,
-        OutExtensionProperties: *mut *mut VkExtensionProperties,
-    ) -> NVSDK_NGX_Result;
-}
 pub type PFN_NVSDK_NGX_ProgressCallback_C =
     ::std::option::Option<unsafe extern "C" fn(InCurrentProgress: f32, OutShouldCancel: *mut bool)>;
-extern "C" {
-    pub fn NVSDK_NGX_VULKAN_EvaluateFeature_C(
-        InCmdList: VkCommandBuffer,
-        InFeatureHandle: *const NVSDK_NGX_Handle,
-        InParameters: *const NVSDK_NGX_Parameter,
-        InCallback: PFN_NVSDK_NGX_ProgressCallback_C,
-    ) -> NVSDK_NGX_Result;
-}
-extern "C" {
-    pub fn GetNGXResultAsString(InNGXResult: NVSDK_NGX_Result) -> *const wchar_t;
-}
-extern "C" {
-    pub fn NVSDK_NGX_UpdateFeature(
-        ApplicationId: *const NVSDK_NGX_Application_Identifier,
-        FeatureID: NVSDK_NGX_Feature,
-    ) -> NVSDK_NGX_Result;
-}
 pub type PFN_NVSDK_NGX_DLSS_GetStatsCallback = ::std::option::Option<
     unsafe extern "C" fn(InParams: *mut NVSDK_NGX_Parameter) -> NVSDK_NGX_Result,
 >;
