@@ -3,43 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const SOURCE_FILE_PATH: &str = "src/bindings.c";
-
-fn vulkan_sdk_include_directory() -> Option<PathBuf> {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    let is_windows = target_os.as_str() == "windows";
-
-    // Mostly on Windows, the Vulkan headers don't exist in a common location but can be found based
-    // on VULKAN_SDK, set by the Vulkan SDK installer.
-    match env::var("VULKAN_SDK") {
-        Ok(v) => Some(PathBuf::from(v).join(
-            // On the Windows SDK the `Include` directory is capitalized
-            if is_windows { "Include" } else { "include" },
-        )),
-        // TODO: On Windows, perhaps this should be an error with a link to the SDK installation?
-        Err(env::VarError::NotPresent) if is_windows => {
-            // On Windows there's no common include directory like `/usr/include` where Vulkan headers can be found
-            panic!("When targeting Windows, the VULKAN_SDK environment variable must be set")
-        }
-        Err(env::VarError::NotPresent) => None,
-        Err(env::VarError::NotUnicode(e)) => {
-            panic!("VULKAN_SDK environment variable is not Unicode: {e:?}")
-        }
-    }
-}
-
-fn compile_helpers() {
-    let mut build = cc::Build::new();
-    build.file(SOURCE_FILE_PATH);
-    if let Some(inc) = vulkan_sdk_include_directory() {
-        build.include(inc);
-    }
-    build.compile("ngx_helpers");
-}
-
 fn main() {
-    compile_helpers();
-
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     assert_eq!(
         target_arch, "x86_64",
@@ -83,8 +47,27 @@ fn main() {
 }
 
 #[cfg(feature = "generate-bindings")]
+fn vulkan_sdk_include_directory() -> Option<PathBuf> {
+    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+    let is_windows = target_os.as_str() == "windows";
+
+    match env::var("VULKAN_SDK") {
+        Ok(v) => Some(PathBuf::from(v).join(
+            // On the Windows SDK the `Include` directory is capitalized
+            if is_windows { "Include" } else { "include" },
+        )),
+        Err(env::VarError::NotPresent) if is_windows => {
+            panic!("When targeting Windows, the VULKAN_SDK environment variable must be set")
+        }
+        Err(env::VarError::NotPresent) => None,
+        Err(env::VarError::NotUnicode(e)) => {
+            panic!("VULKAN_SDK environment variable is not Unicode: {e:?}")
+        }
+    }
+}
+
+#[cfg(feature = "generate-bindings")]
 fn generate_bindings() {
-    use std::env;
     const HEADER_FILE_PATH: &str = "src/bindings.h";
 
     // Tell cargo to invalidate the built crate whenever the wrapper changes
@@ -92,23 +75,14 @@ fn generate_bindings() {
 
     let msrv = bindgen::RustTarget::stable(70, 0).unwrap();
 
-    // The bindgen::Builder is the main entry point
-    // to bindgen, and lets you build up options for
-    // the resulting bindings.
     let mut bindings = bindgen::Builder::default()
         .rust_target(msrv)
-        // The input header we would like to generate
-        // bindings for.
         .header(HEADER_FILE_PATH)
-        // Tell cargo to invalidate the built crate whenever any of the
-        // included header files changed.
         .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
         // Types and functions defined by the SDK:
         .allowlist_item(r"(PFN_)?NVSDK_NGX_\w+")
         // Single exception for a function that doesn't adhere to the naming standard:
         .allowlist_function("GetNGXResultAsString")
-        // Exportable symbols defined by our `bindings.c/h`, wrapping `static inline` helpers
-        .allowlist_function(r"HELPERS_NGX_\w+")
         // Disallow DirectX and CUDA APIs, for which we do not yet provide/implement bindings
         .blocklist_item(r"\w+D3[Dd]1[12]\w+")
         .blocklist_type("PFN_NVSDK_NGX_ResourceReleaseCallback")
@@ -119,7 +93,6 @@ fn generate_bindings() {
         .impl_partialeq(true)
         .derive_default(true)
         .prepend_enum_name(false)
-        .generate_inline_functions(true)
         .bitfield_enum("NVSDK_NGX_DLSS_Feature_Flags")
         .bitfield_enum("NVSDK_NGX_Feature_Support_Result")
         // .generate_cstr(true)
@@ -136,9 +109,7 @@ fn generate_bindings() {
     // Write the bindings to the $OUT_DIR/bindings.rs file.
     let out_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("src");
     bindings
-        // Finish the builder and generate the bindings.
         .generate()
-        // Unwrap the Result and panic on failure.
         .expect("Unable to generate bindings")
         .write_to_file(out_path.join("bindings.rs"))
         .expect("Couldn't write bindings!");

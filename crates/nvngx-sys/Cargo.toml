@@ -20,7 +20,6 @@ include = [
 
 [build-dependencies]
 bindgen = { version = "0.72", optional = true }
-cc = "1"
 
 [dependencies]
 widestring = "1"
