@@ -16,4 +16,9 @@ ash = "0.38"
 log = "0.4"
 uuid = { version = "1", features = ["v4"] }
 derive_builder = "0.12"
-nvngx-sys = { version = "0.3.1",  path = "../nvngx-sys" }
+nvngx-sys = { version = "0.3.1", path = "../nvngx-sys", default-features = false }
+
+[features]
+default = ["linked"]
+loaded = ["nvngx-sys/loaded"]
+linked = ["nvngx-sys/linked"]
