@@ -52,8 +52,6 @@ fn main() {
         .allowlist_item(r"(PFN_)?NVSDK_NGX_\w+")
         // Single exception for a function that doesn't adhere to the naming standard:
         .allowlist_function("GetNGXResultAsString")
-        // Exportable symbols defined by our `bindings.c/h`, wrapping `static inline` helpers
-        .allowlist_function(r"HELPERS_NGX_\w+")
         // Disallow DirectX and CUDA APIs, for which we do not yet provide/implement bindings
         .blocklist_item(r"\w+D3[Dd]1[12]\w+")
         .blocklist_type("PFN_NVSDK_NGX_ResourceReleaseCallback")
@@ -64,7 +62,6 @@ fn main() {
         .impl_partialeq(true)
         .derive_default(true)
         .prepend_enum_name(false)
-        .generate_inline_functions(true)
         .bitfield_enum("NVSDK_NGX_DLSS_Feature_Flags")
         .bitfield_enum("NVSDK_NGX_Feature_Support_Result")
         .disable_name_namespacing()

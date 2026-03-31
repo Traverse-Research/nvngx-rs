@@ -276,7 +276,7 @@ impl RayReconstructionFeature {
     /// Evaluates the feature.
     pub fn evaluate(&mut self, command_buffer: vk::CommandBuffer) -> Result {
         Result::from(unsafe {
-            nvngx_sys::HELPERS_NGX_VULKAN_EVALUATE_DLSSD_EXT(
+            nvngx_sys::helpers::vulkan_evaluate_dlssd_ext(
                 command_buffer,
                 self.feature.handle.0,
                 self.feature.parameters.0,
