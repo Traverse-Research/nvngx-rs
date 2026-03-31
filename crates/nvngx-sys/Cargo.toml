@@ -25,7 +25,13 @@ bindgen = { version = "0.72", optional = true }
 widestring = "1"
 libc = "0.2"
 ash = { version = "0.38", default-features = false }
+libloading = { version = "0.8", optional = true }
 
 [features]
+default = ["loaded"]
+# Runtime loading of the NGX library via libloading
+loaded = ["dep:libloading"]
+# Traditional link-time dynamic linking against the NGX static/import libraries
+linked = []
 # Update generated bindings in the build scripts
 generate-bindings = ["dep:bindgen"]
