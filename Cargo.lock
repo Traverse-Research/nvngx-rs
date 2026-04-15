@@ -12,6 +12,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "api_gen"
+version = "0.3.1+v310.1.0"
+dependencies = [
+ "bindgen",
+]
+
+[[package]]
 name = "ash"
 version = "0.38.0+1.3.281"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -253,7 +260,6 @@ name = "nvngx-sys"
 version = "0.3.1+v310.1.0"
 dependencies = [
  "ash",
- "bindgen",
  "cc",
  "libc",
  "widestring",
