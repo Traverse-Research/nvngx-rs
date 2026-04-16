@@ -1,4 +1,5 @@
-//! Regenerates `nvngx-sys/src/bindings.rs` from the DLSS SDK headers.
+//! Regenerates `nvngx-sys/src/{core,vk,dx}_bindings.rs` from the DLSS SDK
+//! headers.
 //!
 //! Run with `cargo run -p api_gen` after updating the DLSS submodule. Requires
 //! the Vulkan SDK headers (via `VULKAN_SDK` on Windows, system include path on Linux).
@@ -8,7 +9,9 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const HEADER_FILE_PATH: &str = "src/bindings.h";
+const CORE_HEADER_FILE_PATH: &str = "src/core_bindings.h";
+const VK_HEADER_FILE_PATH: &str = "src/vk_bindings.h";
+const DX_HEADER_FILE_PATH: &str = "src/dx_bindings.h";
 
 fn vulkan_sdk_include_directory() -> Option<PathBuf> {
     let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap_or_else(|_| {
@@ -32,31 +35,18 @@ fn vulkan_sdk_include_directory() -> Option<PathBuf> {
     }
 }
 
-fn main() {
-    // Resolve `nvngx-sys` relative to this binary's manifest dir so the tool
-    // works regardless of where `cargo run` is invoked from.
-    let nvngx_sys_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
-        .parent()
-        .expect("api_gen crate must live under crates/")
-        .join("nvngx-sys");
-
-    let header_path = nvngx_sys_dir.join(HEADER_FILE_PATH);
-    let out_path = nvngx_sys_dir.join("src").join("bindings.rs");
-
-    let msrv = bindgen::RustTarget::stable(70, 0).unwrap();
-
-    let mut bindings = bindgen::Builder::default()
+/// Shared bindgen configuration (MSRV target, enum styles, derive options).
+///
+/// `allowlist_recursively(false)` is deliberate: NGX's headers transitively
+/// pull in `<vulkan/vulkan.h>` and the D3D12 SDK, so the default recursive
+/// allowlist would drag in thousands of unrelated Vulkan / D3D12 / CRT types.
+/// We instead enumerate the NGX surface explicitly via regex `allowlist_item`
+/// patterns in each `generate_*_bindings` function, and bring in third-party
+/// types (Vulkan via `ash::vk`, D3D12 via the `windows` crate) on the
+/// consumer side.
+fn common_builder(msrv: bindgen::RustTarget) -> bindgen::Builder {
+    bindgen::Builder::default()
         .rust_target(msrv)
-        .header(header_path.to_str().expect("header path is not UTF-8"))
-        // Types and functions defined by the SDK:
-        .allowlist_item(r"(PFN_)?NVSDK_NGX_\w+")
-        // Single exception for a function that doesn't adhere to the naming standard:
-        .allowlist_function("GetNGXResultAsString")
-        // Disallow DirectX and CUDA APIs, for which we do not yet provide/implement bindings
-        .blocklist_item(r"\w+D3[Dd]1[12]\w+")
-        .blocklist_type("PFN_NVSDK_NGX_ResourceReleaseCallback")
-        .blocklist_item(r"\w+CUDA\w+")
-        // Disallow all other dependencies, like those from libc or Vulkan.
         .allowlist_recursively(false)
         .impl_debug(true)
         .impl_partialeq(true)
@@ -68,7 +58,43 @@ fn main() {
         .disable_nested_struct_naming()
         .default_enum_style(bindgen::EnumVariation::Rust {
             non_exhaustive: true,
-        });
+        })
+}
+
+fn generate_core_bindings(nvngx_sys_dir: &Path, msrv: bindgen::RustTarget) {
+    let header_path = nvngx_sys_dir.join(CORE_HEADER_FILE_PATH);
+    let out_path = nvngx_sys_dir.join("src").join("core_bindings.rs");
+
+    let bindings = common_builder(msrv)
+        .header(header_path.to_str().expect("header path is not UTF-8"))
+        // Core (API-agnostic) types and functions:
+        .allowlist_item(r"(PFN_)?NVSDK_NGX_\w+")
+        .allowlist_function("GetNGXResultAsString")
+        // Blocklist graphics-API-specific items that leak in via transitive
+        // includes — these belong in the VK / DX binding files instead.
+        .blocklist_item(r"(PFN_)?NVSDK_NGX_(VULKAN|D3D1[12]|CUDA)_\w+")
+        .blocklist_item(r"(PFN_)?NVSDK_NGX_\w+VK\w*")
+        .blocklist_item(r"(PFN_)?NVSDK_NGX_Parameter_(Set|Get)D3d1[12]Resource")
+        .blocklist_item(r"(PFN_)?NVSDK_NGX_ResourceReleaseCallback");
+
+    bindings
+        .generate()
+        .expect("Unable to generate core bindings")
+        .write_to_file(&out_path)
+        .expect("Couldn't write core bindings!");
+
+    println!("Wrote {}", out_path.display());
+}
+
+fn generate_vk_bindings(nvngx_sys_dir: &Path, msrv: bindgen::RustTarget) {
+    let header_path = nvngx_sys_dir.join(VK_HEADER_FILE_PATH);
+    let out_path = nvngx_sys_dir.join("src").join("vk_bindings.rs");
+
+    let mut bindings = common_builder(msrv)
+        .header(header_path.to_str().expect("header path is not UTF-8"))
+        // Only Vulkan-specific SDK types and functions:
+        .allowlist_item(r"NVSDK_NGX_VULKAN_\w+")
+        .allowlist_type(r"NVSDK_NGX_\w*VK\w*");
 
     if let Some(inc) = vulkan_sdk_include_directory() {
         bindings = bindings.clang_arg(format!("-I{}", inc.display()));
@@ -76,9 +102,46 @@ fn main() {
 
     bindings
         .generate()
-        .expect("Unable to generate bindings")
+        .expect("Unable to generate Vulkan bindings")
         .write_to_file(&out_path)
-        .expect("Couldn't write bindings!");
+        .expect("Couldn't write Vulkan bindings!");
 
     println!("Wrote {}", out_path.display());
+}
+
+fn generate_dx_bindings(nvngx_sys_dir: &Path, msrv: bindgen::RustTarget) {
+    let header_path = nvngx_sys_dir.join(DX_HEADER_FILE_PATH);
+    let out_path = nvngx_sys_dir.join("src").join("dx_bindings.rs");
+
+    let bindings = common_builder(msrv)
+        .header(header_path.to_str().expect("header path is not UTF-8"))
+        // DX12-specific SDK types and functions:
+        .allowlist_item(r"(PFN_)?NVSDK_NGX_D3D12_\w+")
+        // D3D12 resource parameter accessors:
+        .allowlist_item(r"(PFN_)?NVSDK_NGX_Parameter_(Set|Get)D3d12Resource")
+        // DX12 resource alloc/release callbacks:
+        .allowlist_type("PFN_NVSDK_NGX_ResourceReleaseCallback");
+
+    bindings
+        .generate()
+        .expect("Unable to generate DX12 bindings")
+        .write_to_file(&out_path)
+        .expect("Couldn't write DX12 bindings!");
+
+    println!("Wrote {}", out_path.display());
+}
+
+fn main() {
+    // Resolve `nvngx-sys` relative to this binary's manifest dir so the tool
+    // works regardless of where `cargo run` is invoked from.
+    let nvngx_sys_dir = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .parent()
+        .expect("api_gen crate must live under crates/")
+        .join("nvngx-sys");
+
+    let msrv = bindgen::RustTarget::stable(70, 0).unwrap();
+
+    generate_core_bindings(&nvngx_sys_dir, msrv);
+    generate_vk_bindings(&nvngx_sys_dir, msrv);
+    generate_dx_bindings(&nvngx_sys_dir, msrv);
 }

@@ -17,6 +17,7 @@ The DLSS version used by this crate: [`310.5.3`](https://github.com/NVIDIA/DLSS/
 ## Supported graphics APIs
 
 - Vulkan (via [`ash`](https://crates.io/crates/ash) bindings).
+- DX12 (via [`windows`](https://crates.io/crates/windows) bindings, Windows only).
 
 ## MSRV
 1.70
