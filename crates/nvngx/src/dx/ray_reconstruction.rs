@@ -1,35 +1,26 @@
-//! Vulkan-specific ray reconstruction evaluation and feature types.
+//! DX12-specific ray reconstruction evaluation and feature types.
 
-use nvngx_sys::NVSDK_NGX_VK_DLSSD_Eval_Params;
+use nvngx_sys::{NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions};
+use windows::core::Interface;
+use windows::Win32::Graphics::Direct3D12;
 
 use super::*;
 
-/// Evaluation parameters for [`RayReconstructionFeature`] (Vulkan-specific).
-///
-/// Similar to [`nvngx_sys::NVSDK_NGX_VK_DLSSD_Eval_Params`].
+/// A helpful type alias for [`RayReconstructionFeature`] to quickly mention "DLSS-RR".
+pub type RRFeature = RayReconstructionFeature;
+
+/// Evaluation parameters for [`RayReconstructionFeature`] (DX12-specific).
 #[derive(Debug)]
 pub struct RayReconstructionEvaluationParameters {
-    /// The vulkan resource which is an input to the evaluation
-    /// parameters (for the upscaling).
-    pub(crate) input_color_resource: NVSDK_NGX_Resource_VK,
-    /// The vulkan resource which is the output of the evaluation,
-    /// so the upscaled image.
-    pub(crate) output_color_resource: NVSDK_NGX_Resource_VK,
-    /// The depth buffer.
-    pub(crate) depth_resource: NVSDK_NGX_Resource_VK,
-    /// The motion vectors.
-    pub(crate) motion_vectors_resource: NVSDK_NGX_Resource_VK,
-
-    /// This member isn't visible, as it shouldn't be managed by
-    /// the user of this struct. Instead, this struct provides an
-    /// interface that populates this object and keeps it well-
-    /// maintained.
-    pub(crate) parameters: NVSDK_NGX_VK_DLSSD_Eval_Params,
+    /// The DX12 DLSSD evaluation parameters struct.
+    parameters: nvngx_sys::dx::NVSDK_NGX_D3D12_DLSSD_Eval_Params,
 }
 
 impl Default for RayReconstructionEvaluationParameters {
     fn default() -> Self {
-        unsafe { std::mem::zeroed() }
+        Self {
+            parameters: unsafe { std::mem::zeroed() },
+        }
     }
 }
 
@@ -40,39 +31,33 @@ impl RayReconstructionEvaluationParameters {
     }
 
     /// Sets the color input parameter (the image to upscale).
-    pub fn set_color_input(&mut self, description: VkImageResourceDescription) {
-        self.input_color_resource = description.into();
-        self.parameters.pInColor = std::ptr::addr_of_mut!(self.input_color_resource);
+    pub fn set_color_input(&mut self, resource: &Direct3D12::ID3D12Resource) {
+        self.parameters.pInColor = resource.as_raw() as *mut nvngx_sys::dx::ID3D12Resource;
     }
 
-    /// Sets the color output (the upscaled image) information.
-    pub fn set_color_output(&mut self, description: VkImageResourceDescription) {
-        self.output_color_resource = description.into();
-        self.parameters.pInOutput = std::ptr::addr_of_mut!(self.output_color_resource);
+    /// Sets the color output (the upscaled image).
+    pub fn set_color_output(&mut self, resource: &Direct3D12::ID3D12Resource) {
+        self.parameters.pInOutput = resource.as_raw() as *mut nvngx_sys::dx::ID3D12Resource;
     }
 
     /// Sets the motion vectors.
-    /// In case the `scale` argument is omitted, the `1.0f32` scaling is
-    /// used.
+    /// In case the `scale` argument is omitted, the `1.0f32` scaling is used.
     pub fn set_motions_vectors(
         &mut self,
-        description: VkImageResourceDescription,
+        resource: &Direct3D12::ID3D12Resource,
         scale: Option<[f32; 2]>,
     ) {
-        // 1.0f32 means no scaling (they are already in the pixel space).
         const DEFAULT_SCALING: [f32; 2] = [1.0f32, 1.0f32];
 
-        self.motion_vectors_resource = description.into();
+        self.parameters.pInMotionVectors = resource.as_raw() as *mut nvngx_sys::dx::ID3D12Resource;
         let scales = scale.unwrap_or(DEFAULT_SCALING);
-        self.parameters.pInMotionVectors = std::ptr::addr_of_mut!(self.motion_vectors_resource);
         self.parameters.InMVScaleX = scales[0];
         self.parameters.InMVScaleY = scales[1];
     }
 
     /// Sets the depth buffer.
-    pub fn set_depth_buffer(&mut self, description: VkImageResourceDescription) {
-        self.depth_resource = description.into();
-        self.parameters.pInDepth = std::ptr::addr_of_mut!(self.depth_resource);
+    pub fn set_depth_buffer(&mut self, resource: &Direct3D12::ID3D12Resource) {
+        self.parameters.pInDepth = resource.as_raw() as *mut nvngx_sys::dx::ID3D12Resource;
     }
 
     /// Sets the jitter offsets (like TAA).
@@ -117,29 +102,26 @@ impl RayReconstructionEvaluationParameters {
     /// Returns the filled Ray Reconstruction parameters.
     pub(crate) fn get_rr_evaluation_parameters(
         &mut self,
-    ) -> *mut nvngx_sys::NVSDK_NGX_VK_DLSSD_Eval_Params {
+    ) -> *mut nvngx_sys::dx::NVSDK_NGX_D3D12_DLSSD_Eval_Params {
         std::ptr::addr_of_mut!(self.parameters)
     }
 }
 
-/// A helpful type alias for [`RayReconstructionFeature`] to quickly mention "DLSS-RR".
-pub type RRFeature = RayReconstructionFeature;
-
-/// A Ray Reconstruction (or "DLSS-RR") [`Feature`] (Vulkan).
+/// A Ray Reconstruction (or "DLSS-RR") [`Feature`] (DX12).
 #[derive(Debug)]
 pub struct RayReconstructionFeature {
     feature: Feature,
     parameters: RayReconstructionEvaluationParameters,
-    rendering_resolution: vk::Extent2D,
-    target_resolution: vk::Extent2D,
+    rendering_resolution: [u32; 2],
+    target_resolution: [u32; 2],
 }
 
 impl RayReconstructionFeature {
     /// Creates a new [`RayReconstructionFeature`].
     pub fn new(
         feature: Feature,
-        rendering_resolution: vk::Extent2D,
-        target_resolution: vk::Extent2D,
+        rendering_resolution: [u32; 2],
+        target_resolution: [u32; 2],
     ) -> Result<Self> {
         if !feature.is_ray_reconstruction() {
             return Err(nvngx_sys::Error::Other(
@@ -165,15 +147,13 @@ impl RayReconstructionFeature {
         &mut self.feature
     }
 
-    /// Returns the rendering resolution (input resolution) of the
-    /// image that needs to be upscaled to the `target_resolution`.
-    pub const fn get_rendering_resolution(&self) -> vk::Extent2D {
+    /// Returns the rendering resolution `[width, height]`.
+    pub const fn get_rendering_resolution(&self) -> [u32; 2] {
         self.rendering_resolution
     }
 
-    /// Returns the target resolution (output resolution) of the
-    /// image that the original image should be upscaled to.
-    pub const fn get_target_resolution(&self) -> vk::Extent2D {
+    /// Returns the target resolution `[width, height]`.
+    pub const fn get_target_resolution(&self) -> [u32; 2] {
         self.target_resolution
     }
 
@@ -190,10 +170,11 @@ impl RayReconstructionFeature {
     }
 
     /// Evaluates the feature.
-    pub fn evaluate(&mut self, command_buffer: vk::CommandBuffer) -> Result {
+    pub fn evaluate(&mut self, command_list: &Direct3D12::ID3D12GraphicsCommandList) -> Result {
+        let raw_cmd = command_list.as_raw() as *mut nvngx_sys::dx::ID3D12GraphicsCommandList;
         Result::from(unsafe {
-            nvngx_sys::helpers::vulkan_evaluate_dlssd_ext(
-                command_buffer,
+            nvngx_sys::dx_helpers::d3d12_evaluate_dlssd_ext(
+                raw_cmd,
                 self.feature.handle.ptr,
                 self.feature.parameters.ptr,
                 self.parameters.get_rr_evaluation_parameters(),

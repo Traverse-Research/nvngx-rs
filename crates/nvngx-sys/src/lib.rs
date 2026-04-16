@@ -18,4 +18,8 @@ include!("bindings.rs");
 
 pub mod error;
 pub use error::*;
+#[cfg(windows)]
+pub mod dx;
+#[cfg(windows)]
+pub mod dx_helpers;
 pub mod helpers;

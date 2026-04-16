@@ -8,4 +8,7 @@ pub use common::*;
 pub mod vk;
 pub use vk::*;
 
+#[cfg(windows)]
+pub mod dx;
+
 pub use nvngx_sys as sys;

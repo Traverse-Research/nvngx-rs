@@ -18,3 +18,6 @@ log = "0.4"
 uuid = { version = "1", features = ["v4"] }
 derive_builder = "0.12"
 nvngx-sys = { version = "0.3.1",  path = "../nvngx-sys" }
+
+[target.'cfg(windows)'.dependencies]
+windows = { version = "0.58", features = ["Win32_Graphics_Direct3D12"] }

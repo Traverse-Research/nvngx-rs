@@ -1,16 +1,19 @@
 //! Vulkan bindings to NGX.
 
-use std::rc::Rc;
-
 use ash::vk;
 use nvngx_sys::{
     NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions, NVSDK_NGX_Feature, NVSDK_NGX_ImageViewInfo_VK,
-    NVSDK_NGX_PerfQuality_Value, NVSDK_NGX_Resource_VK, NVSDK_NGX_Resource_VK_Type,
-    NVSDK_NGX_Resource_VK__bindgen_ty_1, Result,
+    NVSDK_NGX_Resource_VK, NVSDK_NGX_Resource_VK_Type, NVSDK_NGX_Resource_VK__bindgen_ty_1, Result,
 };
 
-pub mod feature;
-pub use feature::*;
+// Bring common types into scope so submodules (feature, super_sampling,
+// ray_reconstruction) can access them via `use super::*`.
+use crate::common::{
+    Feature, FeatureHandle, FeatureParameters, RayReconstructionCreateParameters,
+    SuperSamplingCreateParameters,
+};
+
+mod feature;
 pub mod super_sampling;
 pub use super_sampling::*;
 pub mod ray_reconstruction;
@@ -85,16 +88,11 @@ impl RequiredExtensions {
             });
         }
 
-        // unsafe {
-        //     libc::free(device_extensions as _);
-        //     libc::free(instance_extensions as _);
-        // }
-
         Ok(Self { device, instance })
     }
 }
 
-/// NVIDIA NGX system.
+/// NVIDIA NGX system (Vulkan).
 #[repr(transparent)]
 #[derive(Debug)]
 pub struct System {
@@ -207,9 +205,9 @@ impl System {
     ) -> Result<Feature> {
         let parameters = match parameters {
             Some(p) => p,
-            None => FeatureParameters::get_capability_parameters()?,
+            None => FeatureParameters::get_capability_parameters_vk()?,
         };
-        Feature::new(self.device, command_buffer, feature_type, parameters)
+        Feature::new_vk(self.device, command_buffer, feature_type, parameters)
     }
 
     /// Creates a [`SuperSamplingFeature`] (or "DLSS").
@@ -219,7 +217,7 @@ impl System {
         feature_parameters: FeatureParameters,
         create_parameters: SuperSamplingCreateParameters,
     ) -> Result<SuperSamplingFeature> {
-        Feature::new_super_sampling(
+        Feature::new_super_sampling_vk(
             self.device,
             command_buffer,
             feature_parameters,
@@ -233,7 +231,7 @@ impl System {
         command_buffer: vk::CommandBuffer,
         feature_parameters: FeatureParameters,
     ) -> Result<Feature> {
-        Feature::new_frame_generation(self.device, command_buffer, feature_parameters)
+        Feature::new_frame_generation_vk(self.device, command_buffer, feature_parameters)
     }
 
     /// Creates a [`RayReconstructionFeature`].
@@ -243,7 +241,7 @@ impl System {
         feature_parameters: FeatureParameters,
         create_parameters: RayReconstructionCreateParameters,
     ) -> Result<RayReconstructionFeature> {
-        Feature::new_ray_reconstruction(
+        Feature::new_ray_reconstruction_vk(
             self.device,
             command_buffer,
             feature_parameters,
@@ -349,7 +347,7 @@ mod tests {
     #[test]
     fn features() {
         // TODO: initialise vulkan and be able to do this.
-        // dbg!(super::FeatureParameters::get_capability_parameters().unwrap());
+        // dbg!(super::FeatureParameters::get_capability_parameters_vk().unwrap());
     }
 
     #[test]
@@ -362,7 +360,7 @@ mod tests {
     #[ignore]
     fn insert_parameter_debug_macro() -> super::Result {
         let mut map = HashMap::new();
-        let parameters = super::FeatureParameters::get_capability_parameters().unwrap();
+        let parameters = crate::FeatureParameters::get_capability_parameters_vk().unwrap();
         crate::insert_parameter_debug!(
             map,
             parameters,
