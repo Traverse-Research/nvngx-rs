@@ -1,21 +1,43 @@
 # Contributing
 
-## Regenerating `nvngx-sys` bindings
+## Updating the DLSS submodule
 
-The Rust bindings in `crates/nvngx-sys/src/bindings.rs` are generated from the
-DLSS SDK headers via [bindgen]. Regenerate them with:
+When bumping the DLSS SDK to a new version:
 
-```sh
-cargo run -p api_gen
-```
+1. **Update the submodule:**
+   ```sh
+   cd crates/nvngx-sys/DLSS
+   git fetch
+   git checkout <new-tag>
+   cd ../../..
+   ```
 
-Requirements:
+2. **Update version metadata** in `Cargo.toml` (workspace-level `version` field) and any
+   crate-level overrides to reflect the new `+vX.Y.Z` DLSS SDK version.
 
-- The `DLSS` git submodule must be checked out (`git submodule update --init`).
-- The Vulkan SDK headers must be discoverable. On Windows, set `VULKAN_SDK` to
-  the SDK install root. On Linux, install `libvulkan-dev` (or equivalent).
+3. **Regenerate bindings:**
+   ```sh
+   cargo run -p api_gen
+   ```
+   This requires the Vulkan SDK headers to be installed (and `VULKAN_SDK` set on Windows).
 
-Commit the regenerated `bindings.rs` together with the change that motivated
-the regeneration (e.g. a DLSS submodule bump).
+4. **Review helper macro changes.** The Rust helpers in `crates/nvngx-sys/src/helpers.rs`
+   are manual reimplementations of `static inline` C helper macros from the DLSS SDK headers:
 
-[bindgen]: https://rust-lang.github.io/rust-bindgen/
+   | Rust function | C macro source |
+   |---|---|
+   | `dlss_get_optimal_settings` | `DLSS/include/nvsdk_ngx_helpers.h` `NGX_DLSS_GET_OPTIMAL_SETTINGS` |
+   | `vulkan_create_dlss_ext1` | `DLSS/include/nvsdk_ngx_helpers_vk.h` `NGX_VULKAN_CREATE_DLSS_EXT1` |
+   | `vulkan_evaluate_dlss_ext` | `DLSS/include/nvsdk_ngx_helpers_vk.h` `NGX_VULKAN_EVALUATE_DLSS_EXT` |
+   | `vulkan_create_dlssd_ext1` | `DLSS/include/nvsdk_ngx_helpers_dlssd_vk.h` `NGX_VULKAN_CREATE_DLSSD_EXT1` |
+   | `vulkan_evaluate_dlssd_ext` | `DLSS/include/nvsdk_ngx_helpers_dlssd_vk.h` `NGX_VULKAN_EVALUATE_DLSSD_EXT` |
+
+   Diff the header macros against the Rust implementations and update `helpers.rs` if
+   parameters were added, removed, or reordered.
+
+5. **Run the full CI checks locally:**
+   ```sh
+   cargo clippy --workspace --all-targets --all-features -- -Dwarnings
+   cargo test --workspace --all-features
+   cargo fmt --all -- --check
+   ```

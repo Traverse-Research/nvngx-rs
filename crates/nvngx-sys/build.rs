@@ -3,43 +3,7 @@ use std::{
     path::{Path, PathBuf},
 };
 
-const SOURCE_FILE_PATH: &str = "src/bindings.c";
-
-fn vulkan_sdk_include_directory() -> Option<PathBuf> {
-    let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
-    let is_windows = target_os.as_str() == "windows";
-
-    // Mostly on Windows, the Vulkan headers don't exist in a common location but can be found based
-    // on VULKAN_SDK, set by the Vulkan SDK installer.
-    match env::var("VULKAN_SDK") {
-        Ok(v) => Some(PathBuf::from(v).join(
-            // On the Windows SDK the `Include` directory is capitalized
-            if is_windows { "Include" } else { "include" },
-        )),
-        // TODO: On Windows, perhaps this should be an error with a link to the SDK installation?
-        Err(env::VarError::NotPresent) if is_windows => {
-            // On Windows there's no common include directory like `/usr/include` where Vulkan headers can be found
-            panic!("When targeting Windows, the VULKAN_SDK environment variable must be set")
-        }
-        Err(env::VarError::NotPresent) => None,
-        Err(env::VarError::NotUnicode(e)) => {
-            panic!("VULKAN_SDK environment variable is not Unicode: {e:?}")
-        }
-    }
-}
-
-fn compile_helpers() {
-    let mut build = cc::Build::new();
-    build.file(SOURCE_FILE_PATH);
-    if let Some(inc) = vulkan_sdk_include_directory() {
-        build.include(inc);
-    }
-    build.compile("ngx_helpers");
-}
-
 fn main() {
-    compile_helpers();
-
     let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
     assert_eq!(
         target_arch, "x86_64",

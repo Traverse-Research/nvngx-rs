@@ -517,7 +517,7 @@ impl Feature {
             .height(super_sampling_create_parameters.0.Feature.InTargetHeight);
         unsafe {
             let mut handle = FeatureHandle::new();
-            Result::from(nvngx_sys::HELPERS_NGX_VULKAN_CREATE_DLSS_EXT1(
+            Result::from(nvngx_sys::helpers::vulkan_create_dlss_ext1(
                 device,
                 command_buffer,
                 1,
@@ -567,7 +567,7 @@ impl Feature {
 
         unsafe {
             let mut handle = FeatureHandle::new();
-            Result::from(nvngx_sys::HELPERS_NGX_VULKAN_CREATE_DLSSD_EXT1(
+            Result::from(nvngx_sys::helpers::vulkan_create_dlssd_ext1(
                 device,
                 command_buffer,
                 1,

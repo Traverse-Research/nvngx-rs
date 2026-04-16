@@ -18,9 +18,6 @@ include = [
     "/build.rs",
 ]
 
-[build-dependencies]
-cc = "1"
-
 [dependencies]
 widestring = "1"
 libc = "0.2"
