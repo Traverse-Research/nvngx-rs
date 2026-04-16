@@ -6,7 +6,7 @@ use nvngx_sys::{
 
 use super::*;
 
-/// A helpful type alias to quickly mention "DLSS".
+/// A helpful type alias for [`SuperSamplingFeature`] to quickly mention "DLSS".
 pub type DlssFeature = SuperSamplingFeature;
 
 /// Optimal settings for the DLSS based on the desired quality level and
@@ -85,14 +85,13 @@ impl SuperSamplingOptimalSettings {
     }
 }
 
-/// Create parameters for the SuperSampling feature.
+/// Create parameters for [`SuperSamplingFeature`].
 #[repr(transparent)]
 #[derive(Debug)]
 pub struct SuperSamplingCreateParameters(pub(crate) nvngx_sys::NVSDK_NGX_DLSS_Create_Params);
 
 impl SuperSamplingCreateParameters {
-    /// Creates a new set of create parameters for the SuperSampling
-    /// feature.
+    /// Creates a new set of create parameters for [`SuperSamplingFeature`].
     pub fn new(
         render_width: u32,
         render_height: u32,
@@ -159,7 +158,7 @@ impl From<SuperSamplingOptimalSettings> for SuperSamplingCreateParameters {
 //     }
 // }
 
-/// The SuperSampling evaluation parameters.
+/// Evaluation parameters for [`SuperSamplingFeature`].
 #[derive(Debug)]
 pub struct SuperSamplingEvaluationParameters {
     /// The vulkan resource which is an input to the evaluation
@@ -295,7 +294,7 @@ impl SuperSamplingEvaluationParameters {
     // }
 }
 
-/// A SuperSamling (or "DLSS") feature.
+/// A SuperSampling (or "DLSS") [`Feature`].
 #[derive(Debug)]
 pub struct SuperSamplingFeature {
     feature: Feature,
@@ -325,12 +324,12 @@ impl SuperSamplingFeature {
         })
     }
 
-    /// Returns the inner feature object.
+    /// Returns the inner [`Feature`].
     pub fn get_inner(&self) -> &Feature {
         &self.feature
     }
 
-    /// Returns the inner feature object (mutable).
+    /// Returns the inner [`Feature`] (mutable).
     pub fn get_inner_mut(&mut self) -> &mut Feature {
         &mut self.feature
     }
@@ -361,7 +360,7 @@ impl SuperSamplingFeature {
             .is_super_sampling_initialised()
     }
 
-    /// Returns the evaluation parameters.
+    /// Returns the [`SuperSamplingEvaluationParameters`].
     pub fn get_evaluation_parameters_mut(&mut self) -> &mut SuperSamplingEvaluationParameters {
         &mut self.parameters
     }

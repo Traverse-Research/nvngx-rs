@@ -22,14 +22,13 @@ impl From<SuperSamplingOptimalSettings> for RayReconstructionCreateParameters {
     }
 }
 
-/// Create parameters for the Ray Reconstruction feature.
+/// Create parameters for [`RayReconstructionFeature`].
 #[repr(transparent)]
 #[derive(Debug)]
 pub struct RayReconstructionCreateParameters(pub(crate) nvngx_sys::NVSDK_NGX_DLSSD_Create_Params);
 
 impl RayReconstructionCreateParameters {
-    /// Creates a new set of create parameters for the SuperSampling
-    /// feature.
+    /// Creates a new set of create parameters for [`RayReconstructionFeature`].
     #[allow(clippy::too_many_arguments)] // Struct constructor
     pub fn new(
         render_width: u32,
@@ -61,7 +60,7 @@ impl RayReconstructionCreateParameters {
     }
 }
 
-/// The Ray Reconstruction evaluation parameters.
+/// Evaluation parameters for [`RayReconstructionFeature`].
 ///
 /// Similar to [`nvngx_sys::NVSDK_NGX_VK_DLSSD_Eval_Params`].
 #[derive(Debug)]
@@ -91,7 +90,7 @@ impl Default for RayReconstructionEvaluationParameters {
 }
 
 impl RayReconstructionEvaluationParameters {
-    /// Creates a new set of evaluation parameters for SuperSampling.
+    /// Creates a new set of evaluation parameters for [`RayReconstructionFeature`].
     pub fn new() -> Self {
         Self::default()
     }
@@ -199,10 +198,10 @@ impl RayReconstructionEvaluationParameters {
     // }
 }
 
-/// A helpful type alias to quickly mention "DLSS-RR".
+/// A helpful type alias for [`RayReconstructionFeature`] to quickly mention "DLSS-RR".
 pub type RRFeature = RayReconstructionFeature;
 
-/// A Ray Reconstruction (or "DLSS-RR") feature.
+/// A Ray Reconstruction (or "DLSS-RR") [`Feature`].
 #[derive(Debug)]
 pub struct RayReconstructionFeature {
     feature: Feature,
@@ -212,7 +211,7 @@ pub struct RayReconstructionFeature {
 }
 
 impl RayReconstructionFeature {
-    /// Creates a new Super Sampling feature.
+    /// Creates a new [`RayReconstructionFeature`].
     pub fn new(
         feature: Feature,
         rendering_resolution: vk::Extent2D,
@@ -232,12 +231,12 @@ impl RayReconstructionFeature {
         })
     }
 
-    /// Returns the inner feature object.
+    /// Returns the inner [`Feature`].
     pub fn get_inner(&self) -> &Feature {
         &self.feature
     }
 
-    /// Returns the inner feature object (mutable).
+    /// Returns the inner [`Feature`] (mutable).
     pub fn get_inner_mut(&mut self) -> &mut Feature {
         &mut self.feature
     }
@@ -268,7 +267,7 @@ impl RayReconstructionFeature {
             .is_super_sampling_initialised()
     }
 
-    /// Returns the evaluation parameters.
+    /// Returns the [`RayReconstructionEvaluationParameters`].
     pub fn get_evaluation_parameters_mut(&mut self) -> &mut RayReconstructionEvaluationParameters {
         &mut self.parameters
     }

@@ -212,7 +212,7 @@ impl System {
         Feature::new(self.device, command_buffer, feature_type, parameters)
     }
 
-    /// Creates a supersampling (or "DLSS") feature.
+    /// Creates a [`SuperSamplingFeature`] (or "DLSS").
     pub fn create_super_sampling_feature(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -227,7 +227,7 @@ impl System {
         )
     }
 
-    /// Creates a frame generation feature.
+    /// Creates a Frame Generation [`Feature`].
     pub fn create_frame_generation_feature(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -236,7 +236,7 @@ impl System {
         Feature::new_frame_generation(self.device, command_buffer, feature_parameters)
     }
 
-    /// Creates a ray reconstruction feature.
+    /// Creates a [`RayReconstructionFeature`].
     pub fn create_ray_reconstruction_feature(
         &self,
         command_buffer: vk::CommandBuffer,
@@ -303,7 +303,7 @@ pub struct VkImageResourceDescription {
 }
 
 impl VkImageResourceDescription {
-    /// Sets the writable bit.
+    /// Sets the [`mode`](Self::mode) to [`VkResourceMode::Writable`].
     pub fn set_writable(&mut self) {
         self.mode = VkResourceMode::Writable;
     }

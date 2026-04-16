@@ -501,7 +501,7 @@ impl Feature {
         })
     }
 
-    /// Creates a new SuperSampling feature.
+    /// Creates a new [`SuperSamplingFeature`].
     pub fn new_super_sampling(
         device: vk::Device,
         command_buffer: vk::CommandBuffer,
@@ -540,7 +540,7 @@ impl Feature {
         }
     }
 
-    /// Creates the Frame Generation feature.
+    /// Creates a Frame Generation [`Feature`].
     pub fn new_frame_generation(
         device: vk::Device,
         command_buffer: vk::CommandBuffer,
@@ -550,7 +550,7 @@ impl Feature {
         Self::new(device, command_buffer, feature_type, parameters)
     }
 
-    /// Creates the Ray Reconstruction feature.
+    /// Creates a new [`RayReconstructionFeature`].
     pub fn new_ray_reconstruction(
         device: vk::Device,
         command_buffer: vk::CommandBuffer,
@@ -590,12 +590,12 @@ impl Feature {
         }
     }
 
-    /// Returns the parameters associated with this feature.
+    /// Returns the [`FeatureParameters`] associated with this feature.
     pub fn get_parameters(&self) -> &FeatureParameters {
         &self.parameters
     }
 
-    /// Returns the parameters associated with this feature.
+    /// Returns the [`FeatureParameters`] associated with this feature.
     pub fn get_parameters_mut(&mut self) -> &mut FeatureParameters {
         Rc::get_mut(&mut self.parameters).unwrap()
     }
@@ -605,17 +605,17 @@ impl Feature {
         self.feature_type
     }
 
-    /// Returns [`true`] if this feature is the super sampling one.
+    /// Returns [`true`] if this is a [`SuperSamplingFeature`].
     pub fn is_super_sampling(&self) -> bool {
         self.feature_type == NVSDK_NGX_Feature::NVSDK_NGX_Feature_SuperSampling
     }
 
-    /// Returns [`true`] if this feature is the frame generation one.
+    /// Returns [`true`] if this is a Frame Generation [`Feature`].
     pub fn is_frame_generation(&self) -> bool {
         self.feature_type == NVSDK_NGX_Feature::NVSDK_NGX_Feature_FrameGeneration
     }
 
-    /// Returns [`true`] if this feature is the ray reconstruction one.
+    /// Returns [`true`] if this is a [`RayReconstructionFeature`].
     pub fn is_ray_reconstruction(&self) -> bool {
         self.feature_type == NVSDK_NGX_Feature::NVSDK_NGX_Feature_RayReconstruction
     }
