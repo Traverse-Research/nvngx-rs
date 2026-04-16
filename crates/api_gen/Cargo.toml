@@ -1,6 +1,6 @@
 [package]
 name = "api_gen"
-version.workspace = true
+version = "0.0.0"
 edition = "2021"
 description = "Regenerates the `nvngx-sys` Rust bindings from the DLSS SDK headers."
 license = "MIT"

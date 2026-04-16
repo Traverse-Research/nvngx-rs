@@ -458,6 +458,16 @@ pub const NVSDK_NGX_Parameter_DLSSD_DiffuseRayDirectionHitDistance: &[u8; 37] =
     b"DLSSD.DiffuseRayDirectionHitDistance\0";
 pub const NVSDK_NGX_Parameter_DLSSD_SpecularRayDirectionHitDistance: &[u8; 38] =
     b"DLSSD.SpecularRayDirectionHitDistance\0";
+pub const NVSDK_NGX_Parameter_DLSSD_Alpha: &[u8; 12] = b"DLSSD.Alpha\0";
+pub const NVSDK_NGX_Parameter_DLSSD_OutputAlpha: &[u8; 18] = b"DLSSD.OutputAlpha\0";
+pub const NVSDK_NGX_Parameter_DLSSD_Alpha_Subrect_Base_X: &[u8; 27] =
+    b"DLSSD.Alpha.Subrect.Base.X\0";
+pub const NVSDK_NGX_Parameter_DLSSD_Alpha_Subrect_Base_Y: &[u8; 27] =
+    b"DLSSD.Alpha.Subrect.Base.Y\0";
+pub const NVSDK_NGX_Parameter_DLSSD_OutputAlpha_Subrect_Base_X: &[u8; 33] =
+    b"DLSSD.OutputAlpha.Subrect.Base.X\0";
+pub const NVSDK_NGX_Parameter_DLSSD_OutputAlpha_Subrect_Base_Y: &[u8; 33] =
+    b"DLSSD.OutputAlpha.Subrect.Base.Y\0";
 pub const NVSDK_NGX_Parameter_DLSSD_ReflectedAlbedo_Subrect_Base_X: &[u8; 37] =
     b"DLSSD.ReflectedAlbedo.Subrect.Base.X\0";
 pub const NVSDK_NGX_Parameter_DLSSD_ReflectedAlbedo_Subrect_Base_Y: &[u8; 37] =
@@ -576,11 +586,6 @@ pub const NVSDK_NGX_Parameter_RayReconstruction_Hint_Render_Preset_UltraQuality:
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum NVSDK_NGX_DLSS_Hint_Render_Preset {
     NVSDK_NGX_DLSS_Hint_Render_Preset_Default = 0,
-    NVSDK_NGX_DLSS_Hint_Render_Preset_A = 1,
-    NVSDK_NGX_DLSS_Hint_Render_Preset_B = 2,
-    NVSDK_NGX_DLSS_Hint_Render_Preset_C = 3,
-    NVSDK_NGX_DLSS_Hint_Render_Preset_D = 4,
-    NVSDK_NGX_DLSS_Hint_Render_Preset_E = 5,
     NVSDK_NGX_DLSS_Hint_Render_Preset_F = 6,
     NVSDK_NGX_DLSS_Hint_Render_Preset_G = 7,
     NVSDK_NGX_DLSS_Hint_Render_Preset_H_Reserved = 8,
@@ -717,20 +722,6 @@ fn bindgen_test_layout_NVSDK_NGX_Handle() {
         0usize,
         "Offset of field: NVSDK_NGX_Handle::Id"
     );
-}
-#[repr(u32)]
-#[non_exhaustive]
-#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
-pub enum NVSDK_NGX_GPU_Arch {
-    NVSDK_NGX_GPU_Arch_NotSupported = 0,
-    NVSDK_NGX_GPU_Arch_Volta = 320,
-    NVSDK_NGX_GPU_Arch_Turing = 352,
-    NVSDK_NGX_GPU_Arch_Ampere = 368,
-    NVSDK_NGX_GPU_Arch_Ada = 400,
-    NVSDK_NGX_GPU_Arch_Hopper = 384,
-    NVSDK_NGX_GPU_Arch_Blackwell = 416,
-    NVSDK_NGX_GPU_Arch_Blackwell2 = 432,
-    NVSDK_NGX_GPU_Arch_Unknown = 134217727,
 }
 impl NVSDK_NGX_DLSS_Feature_Flags {
     pub const NVSDK_NGX_DLSS_Feature_Flags_IsInvalid: NVSDK_NGX_DLSS_Feature_Flags =
@@ -2492,9 +2483,6 @@ pub enum NVSDK_NGX_DLSS_Depth_Type {
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum NVSDK_NGX_RayReconstruction_Hint_Render_Preset {
     NVSDK_NGX_RayReconstruction_Hint_Render_Preset_Default = 0,
-    NVSDK_NGX_RayReconstruction_Hint_Render_Preset_A = 1,
-    NVSDK_NGX_RayReconstruction_Hint_Render_Preset_B = 2,
-    NVSDK_NGX_RayReconstruction_Hint_Render_Preset_C = 3,
     NVSDK_NGX_RayReconstruction_Hint_Render_Preset_D = 4,
     NVSDK_NGX_RayReconstruction_Hint_Render_Preset_E = 5,
     NVSDK_NGX_RayReconstruction_Hint_Render_Preset_F = 6,
@@ -2606,7 +2594,9 @@ pub struct NVSDK_NGX_VK_DLSSD_Eval_Params {
     pub pInNormals: *mut NVSDK_NGX_Resource_VK,
     pub pInRoughness: *mut NVSDK_NGX_Resource_VK,
     pub pInColor: *mut NVSDK_NGX_Resource_VK,
+    pub pInAlpha: *mut NVSDK_NGX_Resource_VK,
     pub pInOutput: *mut NVSDK_NGX_Resource_VK,
+    pub pInOutputAlpha: *mut NVSDK_NGX_Resource_VK,
     pub pInDepth: *mut NVSDK_NGX_Resource_VK,
     pub pInMotionVectors: *mut NVSDK_NGX_Resource_VK,
     pub InJitterOffsetX: f32,
@@ -2619,6 +2609,8 @@ pub struct NVSDK_NGX_VK_DLSSD_Eval_Params {
     pub pInTransparencyMask: *mut NVSDK_NGX_Resource_VK,
     pub pInExposureTexture: *mut NVSDK_NGX_Resource_VK,
     pub pInBiasCurrentColorMask: *mut NVSDK_NGX_Resource_VK,
+    pub InAlphaSubrectBase: NVSDK_NGX_Coordinates,
+    pub InOutputAlphaSubrectBase: NVSDK_NGX_Coordinates,
     pub InDiffuseAlbedoSubrectBase: NVSDK_NGX_Coordinates,
     pub InSpecularAlbedoSubrectBase: NVSDK_NGX_Coordinates,
     pub InNormalsSubrectBase: NVSDK_NGX_Coordinates,
@@ -2706,7 +2698,7 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<NVSDK_NGX_VK_DLSSD_Eval_Params>(),
-        848usize,
+        880usize,
         "Size of NVSDK_NGX_VK_DLSSD_Eval_Params"
     );
     assert_eq!(
@@ -2740,170 +2732,190 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColor"
     );
     assert_eq!(
-        unsafe { ::std::ptr::addr_of!((*ptr).pInOutput) as usize - ptr as usize },
+        unsafe { ::std::ptr::addr_of!((*ptr).pInAlpha) as usize - ptr as usize },
         40usize,
+        "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInAlpha"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pInOutput) as usize - ptr as usize },
+        48usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInOutput"
     );
     assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pInOutputAlpha) as usize - ptr as usize },
+        56usize,
+        "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInOutputAlpha"
+    );
+    assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInDepth) as usize - ptr as usize },
-        48usize,
+        64usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInDepth"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInMotionVectors) as usize - ptr as usize },
-        56usize,
+        72usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInMotionVectors"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InJitterOffsetX) as usize - ptr as usize },
-        64usize,
+        80usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InJitterOffsetX"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InJitterOffsetY) as usize - ptr as usize },
-        68usize,
+        84usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InJitterOffsetY"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InRenderSubrectDimensions) as usize - ptr as usize },
-        72usize,
+        88usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InRenderSubrectDimensions"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InReset) as usize - ptr as usize },
-        80usize,
+        96usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InReset"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InMVScaleX) as usize - ptr as usize },
-        84usize,
+        100usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InMVScaleX"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InMVScaleY) as usize - ptr as usize },
-        88usize,
+        104usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InMVScaleY"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInTransparencyMask) as usize - ptr as usize },
-        96usize,
+        112usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInTransparencyMask"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInExposureTexture) as usize - ptr as usize },
-        104usize,
+        120usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInExposureTexture"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInBiasCurrentColorMask) as usize - ptr as usize },
-        112usize,
+        128usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInBiasCurrentColorMask"
     );
     assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).InAlphaSubrectBase) as usize - ptr as usize },
+        136usize,
+        "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InAlphaSubrectBase"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).InOutputAlphaSubrectBase) as usize - ptr as usize },
+        144usize,
+        "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InOutputAlphaSubrectBase"
+    );
+    assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InDiffuseAlbedoSubrectBase) as usize - ptr as usize },
-        120usize,
+        152usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InDiffuseAlbedoSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InSpecularAlbedoSubrectBase) as usize - ptr as usize },
-        128usize,
+        160usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InSpecularAlbedoSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InNormalsSubrectBase) as usize - ptr as usize },
-        136usize,
+        168usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InNormalsSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InRoughnessSubrectBase) as usize - ptr as usize },
-        144usize,
+        176usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InRoughnessSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InColorSubrectBase) as usize - ptr as usize },
-        152usize,
+        184usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InDepthSubrectBase) as usize - ptr as usize },
-        160usize,
+        192usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InDepthSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InMVSubrectBase) as usize - ptr as usize },
-        168usize,
+        200usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InMVSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InTranslucencySubrectBase) as usize - ptr as usize },
-        176usize,
+        208usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InTranslucencySubrectBase"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InBiasCurrentColorSubrectBase) as usize - ptr as usize
         },
-        184usize,
+        216usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InBiasCurrentColorSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InOutputSubrectBase) as usize - ptr as usize },
-        192usize,
+        224usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InOutputSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InPreExposure) as usize - ptr as usize },
-        200usize,
+        232usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InPreExposure"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InExposureScale) as usize - ptr as usize },
-        204usize,
+        236usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InExposureScale"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InIndicatorInvertXAxis) as usize - ptr as usize },
-        208usize,
+        240usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InIndicatorInvertXAxis"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InIndicatorInvertYAxis) as usize - ptr as usize },
-        212usize,
+        244usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InIndicatorInvertYAxis"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInReflectedAlbedo) as usize - ptr as usize },
-        216usize,
+        248usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInReflectedAlbedo"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInColorBeforeParticles) as usize - ptr as usize },
-        224usize,
+        256usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorBeforeParticles"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInColorAfterParticles) as usize - ptr as usize },
-        232usize,
+        264usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorAfterParticles"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInColorBeforeTransparency) as usize - ptr as usize },
-        240usize,
+        272usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorBeforeTransparency"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInColorAfterTransparency) as usize - ptr as usize },
-        248usize,
+        280usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorAfterTransparency"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInColorBeforeFog) as usize - ptr as usize },
-        256usize,
+        288usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorBeforeFog"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInColorAfterFog) as usize - ptr as usize },
-        264usize,
+        296usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorAfterFog"
     );
     assert_eq!(
@@ -2911,100 +2923,100 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
             ::std::ptr::addr_of!((*ptr).pInScreenSpaceSubsurfaceScatteringGuide) as usize
                 - ptr as usize
         },
-        272usize,
+        304usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInScreenSpaceSubsurfaceScatteringGuide"
     );
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . pInColorBeforeScreenSpaceSubsurfaceScattering) as usize - ptr as usize } , 280usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorBeforeScreenSpaceSubsurfaceScattering");
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . pInColorAfterScreenSpaceSubsurfaceScattering) as usize - ptr as usize } , 288usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorAfterScreenSpaceSubsurfaceScattering");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . pInColorBeforeScreenSpaceSubsurfaceScattering) as usize - ptr as usize } , 312usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorBeforeScreenSpaceSubsurfaceScattering");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . pInColorAfterScreenSpaceSubsurfaceScattering) as usize - ptr as usize } , 320usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorAfterScreenSpaceSubsurfaceScattering");
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).pInScreenSpaceRefractionGuide) as usize - ptr as usize
         },
-        296usize,
+        328usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInScreenSpaceRefractionGuide"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).pInColorBeforeScreenSpaceRefraction) as usize - ptr as usize
         },
-        304usize,
+        336usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorBeforeScreenSpaceRefraction"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).pInColorAfterScreenSpaceRefraction) as usize - ptr as usize
         },
-        312usize,
+        344usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorAfterScreenSpaceRefraction"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInDepthOfFieldGuide) as usize - ptr as usize },
-        320usize,
+        352usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInDepthOfFieldGuide"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInColorBeforeDepthOfField) as usize - ptr as usize },
-        328usize,
+        360usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorBeforeDepthOfField"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInColorAfterDepthOfField) as usize - ptr as usize },
-        336usize,
+        368usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInColorAfterDepthOfField"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInDiffuseHitDistance) as usize - ptr as usize },
-        344usize,
+        376usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInDiffuseHitDistance"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInSpecularHitDistance) as usize - ptr as usize },
-        352usize,
+        384usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInSpecularHitDistance"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInDiffuseRayDirection) as usize - ptr as usize },
-        360usize,
+        392usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInDiffuseRayDirection"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInSpecularRayDirection) as usize - ptr as usize },
-        368usize,
+        400usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInSpecularRayDirection"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).pInDiffuseRayDirectionHitDistance) as usize - ptr as usize
         },
-        376usize,
+        408usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInDiffuseRayDirectionHitDistance"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).pInSpecularRayDirectionHitDistance) as usize - ptr as usize
         },
-        384usize,
+        416usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInSpecularRayDirectionHitDistance"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InReflectedAlbedoSubrectBase) as usize - ptr as usize
         },
-        392usize,
+        424usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InReflectedAlbedoSubrectBase"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InColorBeforeParticlesSubrectBase) as usize - ptr as usize
         },
-        400usize,
+        432usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorBeforeParticlesSubrectBase"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InColorAfterParticlesSubrectBase) as usize - ptr as usize
         },
-        408usize,
+        440usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorAfterParticlesSubrectBase"
     );
     assert_eq!(
@@ -3012,44 +3024,44 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
             ::std::ptr::addr_of!((*ptr).InColorBeforeTransparencySubrectBase) as usize
                 - ptr as usize
         },
-        416usize,
+        448usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorBeforeTransparencySubrectBase"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InColorAfterTransparencySubrectBase) as usize - ptr as usize
         },
-        424usize,
+        456usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorAfterTransparencySubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InColorBeforeFogSubrectBase) as usize - ptr as usize },
-        432usize,
+        464usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorBeforeFogSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InColorAfterFogSubrectBase) as usize - ptr as usize },
-        440usize,
+        472usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorAfterFogSubrectBase"
     );
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InScreenSpaceSubsurfaceScatteringGuideSubrectBase) as usize - ptr as usize } , 448usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InScreenSpaceSubsurfaceScatteringGuideSubrectBase");
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InColorBeforeScreenSpaceSubsurfaceScatteringSubrectBase) as usize - ptr as usize } , 456usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorBeforeScreenSpaceSubsurfaceScatteringSubrectBase");
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InColorAfterScreenSpaceSubsurfaceScatteringSubrectBase) as usize - ptr as usize } , 464usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorAfterScreenSpaceSubsurfaceScatteringSubrectBase");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InScreenSpaceSubsurfaceScatteringGuideSubrectBase) as usize - ptr as usize } , 480usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InScreenSpaceSubsurfaceScatteringGuideSubrectBase");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InColorBeforeScreenSpaceSubsurfaceScatteringSubrectBase) as usize - ptr as usize } , 488usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorBeforeScreenSpaceSubsurfaceScatteringSubrectBase");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InColorAfterScreenSpaceSubsurfaceScatteringSubrectBase) as usize - ptr as usize } , 496usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorAfterScreenSpaceSubsurfaceScatteringSubrectBase");
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InScreenSpaceRefractionGuideSubrectBase) as usize
                 - ptr as usize
         },
-        472usize,
+        504usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InScreenSpaceRefractionGuideSubrectBase"
     );
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InColorBeforeScreenSpaceRefractionSubrectBase) as usize - ptr as usize } , 480usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorBeforeScreenSpaceRefractionSubrectBase");
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InColorAfterScreenSpaceRefractionSubrectBase) as usize - ptr as usize } , 488usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorAfterScreenSpaceRefractionSubrectBase");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InColorBeforeScreenSpaceRefractionSubrectBase) as usize - ptr as usize } , 512usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorBeforeScreenSpaceRefractionSubrectBase");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InColorAfterScreenSpaceRefractionSubrectBase) as usize - ptr as usize } , 520usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorAfterScreenSpaceRefractionSubrectBase");
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InDepthOfFieldGuideSubrectBase) as usize - ptr as usize
         },
-        496usize,
+        528usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InDepthOfFieldGuideSubrectBase"
     );
     assert_eq!(
@@ -3057,121 +3069,121 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
             ::std::ptr::addr_of!((*ptr).InColorBeforeDepthOfFieldSubrectBase) as usize
                 - ptr as usize
         },
-        504usize,
+        536usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorBeforeDepthOfFieldSubrectBase"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InColorAfterDepthOfFieldSubrectBase) as usize - ptr as usize
         },
-        512usize,
+        544usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InColorAfterDepthOfFieldSubrectBase"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InDiffuseHitDistanceSubrectBase) as usize - ptr as usize
         },
-        520usize,
+        552usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InDiffuseHitDistanceSubrectBase"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InSpecularHitDistanceSubrectBase) as usize - ptr as usize
         },
-        528usize,
+        560usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InSpecularHitDistanceSubrectBase"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InDiffuseRayDirectionSubrectBase) as usize - ptr as usize
         },
-        536usize,
+        568usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InDiffuseRayDirectionSubrectBase"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InSpecularRayDirectionSubrectBase) as usize - ptr as usize
         },
-        544usize,
+        576usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InSpecularRayDirectionSubrectBase"
     );
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InDiffuseRayDirectionHitDistanceSubrectBase) as usize - ptr as usize } , 552usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InDiffuseRayDirectionHitDistanceSubrectBase");
-    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InSpecularRayDirectionHitDistanceSubrectBase) as usize - ptr as usize } , 560usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InSpecularRayDirectionHitDistanceSubrectBase");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InDiffuseRayDirectionHitDistanceSubrectBase) as usize - ptr as usize } , 584usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InDiffuseRayDirectionHitDistanceSubrectBase");
+    assert_eq ! (unsafe { :: std :: ptr :: addr_of ! ((* ptr) . InSpecularRayDirectionHitDistanceSubrectBase) as usize - ptr as usize } , 592usize , "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InSpecularRayDirectionHitDistanceSubrectBase");
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInWorldToViewMatrix) as usize - ptr as usize },
-        568usize,
+        600usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInWorldToViewMatrix"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInViewToClipMatrix) as usize - ptr as usize },
-        576usize,
+        608usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInViewToClipMatrix"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).GBufferSurface) as usize - ptr as usize },
-        584usize,
+        616usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::GBufferSurface"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InToneMapperType) as usize - ptr as usize },
-        712usize,
+        744usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InToneMapperType"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInMotionVectors3D) as usize - ptr as usize },
-        720usize,
+        752usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInMotionVectors3D"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInIsParticleMask) as usize - ptr as usize },
-        728usize,
+        760usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInIsParticleMask"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInAnimatedTextureMask) as usize - ptr as usize },
-        736usize,
+        768usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInAnimatedTextureMask"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInDepthHighRes) as usize - ptr as usize },
-        744usize,
+        776usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInDepthHighRes"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInPositionViewSpace) as usize - ptr as usize },
-        752usize,
+        784usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInPositionViewSpace"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InFrameTimeDeltaInMsec) as usize - ptr as usize },
-        760usize,
+        792usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InFrameTimeDeltaInMsec"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInRayTracingHitDistance) as usize - ptr as usize },
-        768usize,
+        800usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInRayTracingHitDistance"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInMotionVectorsReflections) as usize - ptr as usize },
-        776usize,
+        808usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInMotionVectorsReflections"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInTransparencyLayer) as usize - ptr as usize },
-        784usize,
+        816usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInTransparencyLayer"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InTransparencyLayerSubrectBase) as usize - ptr as usize
         },
-        792usize,
+        824usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InTransparencyLayerSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInTransparencyLayerOpacity) as usize - ptr as usize },
-        800usize,
+        832usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInTransparencyLayerOpacity"
     );
     assert_eq!(
@@ -3179,31 +3191,31 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
             ::std::ptr::addr_of!((*ptr).InTransparencyLayerOpacitySubrectBase) as usize
                 - ptr as usize
         },
-        808usize,
+        840usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InTransparencyLayerOpacitySubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInTransparencyLayerMvecs) as usize - ptr as usize },
-        816usize,
+        848usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInTransparencyLayerMvecs"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InTransparencyLayerMvecsSubrectBase) as usize - ptr as usize
         },
-        824usize,
+        856usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InTransparencyLayerMvecsSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInDisocclusionMask) as usize - ptr as usize },
-        832usize,
+        864usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInDisocclusionMask"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InDisocclusionMaskSubrectBase) as usize - ptr as usize
         },
-        840usize,
+        872usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InDisocclusionMaskSubrectBase"
     );
 }
