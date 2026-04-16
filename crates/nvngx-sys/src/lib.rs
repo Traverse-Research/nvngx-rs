@@ -18,4 +18,17 @@ include!("bindings.rs");
 
 pub mod error;
 pub use error::*;
+
+/// `extern "C"` function declarations for link-time binding.
+#[cfg(feature = "linked")]
+pub mod linked;
+#[cfg(feature = "linked")]
+pub use linked::*;
+
+/// Pure Rust reimplementations of the SDK helper macros.
+#[cfg(feature = "linked")]
 pub mod helpers;
+
+/// Runtime-loaded NGX library via `libloading`.
+#[cfg(feature = "loaded")]
+pub mod library;

@@ -51,17 +51,29 @@ jobs:
             target
           key: ${{ runner.os }}-test-${{ steps.tc.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.toml') }}
 
-      - name: Build all features
-        if: matrix.features == ''
-        run: cargo build --all-features
+      - name: Build with loaded feature (default)
+        run: cargo build --workspace
 
-      - name: Test all features
-        if: matrix.features == ''
-        run: cargo test --all-features
+      - name: Test with loaded feature (default)
+        run: cargo test --workspace
+
+      - name: Build with linked feature
+        run: cargo build --workspace --no-default-features --features linked
+
+      - name: Test with linked feature
+        run: cargo test --workspace --no-default-features --features linked
 
       - name: Build with no default features
-        if: matrix.features == ''
-        run: cargo build --no-default-features
+        run: cargo build --workspace --no-default-features
+
+      # Exercise the `loaded` path of `nvngx-sys` in isolation: workspace
+      # feature unification otherwise pulls in `nvngx`'s `linked` default and
+      # would mask any accidental dependency of the loaded path on the DLSS
+      # link library. With `-p nvngx-sys --no-default-features -F loaded` the
+      # build script's `link_libraries` is gated off and no `-lnvsdk_ngx`
+      # directive is emitted.
+      - name: Test nvngx-sys loaded-only (no DLSS link)
+        run: cargo test -p nvngx-sys --no-default-features --features loaded
 
   rustfmt:
     name: Format
@@ -107,8 +119,11 @@ jobs:
             target
           key: ${{ runner.os }}-clippy-${{ steps.tc.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.toml') }}
 
-      - name: Run clippy with disallowed warnings
-        run: cargo clippy --workspace --all-targets --all-features -- -Dwarnings
+      - name: Run clippy (loaded, default)
+        run: cargo clippy --workspace --all-targets -- -Dwarnings
+
+      - name: Run clippy (linked)
+        run: cargo clippy --workspace --all-targets --no-default-features --features linked -- -Dwarnings
 
   MSRV:
     runs-on: ubuntu-latest # TODO: Matrix to lint all platforms
@@ -135,7 +150,8 @@ jobs:
           key: ${{ runner.os }}-msrv-${{ steps.tc.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.toml') }}
 
       # Ensure that it still builds, while allowing warnings
-      - run: cargo check --all-features
+      - run: cargo check --workspace
+      - run: cargo check --workspace --no-default-features --features linked
 
   doc:
     name: Build docs
@@ -164,7 +180,7 @@ jobs:
       - name: Build docs
         env:
           RUSTDOCFLAGS: -Dwarnings
-        run: cargo doc --workspace --no-deps --all-features --document-private-items
+        run: cargo doc --workspace --no-deps --document-private-items
 
   generate-bindings:
     name: Generate nvngx-sys bindings
