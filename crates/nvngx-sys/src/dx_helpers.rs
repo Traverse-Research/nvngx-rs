@@ -1,149 +1,15 @@
-//! Pure Rust reimplementations of the `static inline` helper functions/macros
-//! from the NVIDIA NGX SDK headers (`nvsdk_ngx_helpers*.h`).
+//! Pure Rust reimplementations of the `static inline` DX12 helper functions/macros
+//! from the NVIDIA NGX SDK headers (`nvsdk_ngx_helpers.h`, `nvsdk_ngx_helpers_dlssd.h`).
 
-use ash::vk::Handle;
+use crate::{dx::*, NVSDK_NGX_GBufferType::*, *};
 
-use crate::vk::{
-    NVSDK_NGX_Resource_VK, NVSDK_NGX_Resource_VK_Type, NVSDK_NGX_VK_DLSSD_Eval_Params,
-    NVSDK_NGX_VK_DLSS_Eval_Params, NVSDK_NGX_VULKAN_CreateFeature, NVSDK_NGX_VULKAN_CreateFeature1,
-    NVSDK_NGX_VULKAN_EvaluateFeature_C,
-};
-use crate::{NVSDK_NGX_GBufferType::*, *};
-
-/// Equivalent of `NVSDK_NGX_ENSURE_VK_IMAGEVIEW` from `nvsdk_ngx_helpers_vk.h`.
-///
-/// Returns [`NVSDK_NGX_Result::NVSDK_NGX_Result_FAIL_InvalidParameter`] if the resource
-/// is non-null and its type is not [`NVSDK_NGX_Resource_VK_Type::NVSDK_NGX_RESOURCE_VK_TYPE_VK_IMAGEVIEW`].
-unsafe fn ensure_vk_imageview(resource: *mut NVSDK_NGX_Resource_VK) -> Option<NVSDK_NGX_Result> {
-    if !resource.is_null()
-        && (*resource).Type != NVSDK_NGX_Resource_VK_Type::NVSDK_NGX_RESOURCE_VK_TYPE_VK_IMAGEVIEW
-    {
-        Some(NVSDK_NGX_Result::NVSDK_NGX_Result_FAIL_InvalidParameter)
-    } else {
-        None
-    }
-}
-
-/// Equivalent of `NVSDK_NGX_FAILED` from `nvsdk_ngx_defs.h`.
-fn ngx_failed(value: NVSDK_NGX_Result) -> bool {
-    (value as u32 & 0xFFF0_0000) == NVSDK_NGX_Result::NVSDK_NGX_Result_Fail as u32
-}
-
-/// Equivalent of `NGX_DLSS_GET_OPTIMAL_SETTINGS` from `nvsdk_ngx_helpers.h`.
-///
-/// # Safety
-///
-/// All pointer parameters must be valid. `p_in_params` must have been obtained
-/// from [`crate::vk::NVSDK_NGX_VULKAN_GetCapabilityParameters`].
-pub unsafe fn dlss_get_optimal_settings(
-    p_in_params: *mut NVSDK_NGX_Parameter,
-    in_width: u32,
-    in_height: u32,
-    in_perf_quality_value: NVSDK_NGX_PerfQuality_Value,
-    p_out_render_optimal_width: *mut u32,
-    p_out_render_optimal_height: *mut u32,
-    p_out_render_max_width: *mut u32,
-    p_out_render_max_height: *mut u32,
-    p_out_render_min_width: *mut u32,
-    p_out_render_min_height: *mut u32,
-    p_out_sharpness: *mut f32,
-) -> NVSDK_NGX_Result {
-    let mut callback: *mut std::ffi::c_void = std::ptr::null_mut();
-    NVSDK_NGX_Parameter_GetVoidPointer(
-        p_in_params,
-        NVSDK_NGX_Parameter_DLSSOptimalSettingsCallback
-            .as_ptr()
-            .cast(),
-        &mut callback,
-    );
-    if callback.is_null() {
-        return NVSDK_NGX_Result::NVSDK_NGX_Result_FAIL_OutOfDate;
-    }
-
-    NVSDK_NGX_Parameter_SetUI(
-        p_in_params,
-        NVSDK_NGX_Parameter_Width.as_ptr().cast(),
-        in_width,
-    );
-    NVSDK_NGX_Parameter_SetUI(
-        p_in_params,
-        NVSDK_NGX_Parameter_Height.as_ptr().cast(),
-        in_height,
-    );
-    NVSDK_NGX_Parameter_SetI(
-        p_in_params,
-        NVSDK_NGX_Parameter_PerfQualityValue.as_ptr().cast(),
-        in_perf_quality_value as i32,
-    );
-    // Some older DLSS dlls still expect this value to be set
-    NVSDK_NGX_Parameter_SetI(p_in_params, NVSDK_NGX_Parameter_RTXValue.as_ptr().cast(), 0);
-
-    let pfn_callback: PFN_NVSDK_NGX_DLSS_GetOptimalSettingsCallback = std::mem::transmute(callback);
-    let res = pfn_callback.unwrap()(p_in_params);
-    if ngx_failed(res) {
-        return res;
-    }
-
-    NVSDK_NGX_Parameter_GetUI(
-        p_in_params,
-        NVSDK_NGX_Parameter_OutWidth.as_ptr().cast(),
-        p_out_render_optimal_width,
-    );
-    NVSDK_NGX_Parameter_GetUI(
-        p_in_params,
-        NVSDK_NGX_Parameter_OutHeight.as_ptr().cast(),
-        p_out_render_optimal_height,
-    );
-    // If we have an older DLSS Dll those might need to be set to the optimal dimensions instead
-    *p_out_render_max_width = *p_out_render_optimal_width;
-    *p_out_render_max_height = *p_out_render_optimal_height;
-    *p_out_render_min_width = *p_out_render_optimal_width;
-    *p_out_render_min_height = *p_out_render_optimal_height;
-    NVSDK_NGX_Parameter_GetUI(
-        p_in_params,
-        NVSDK_NGX_Parameter_DLSS_Get_Dynamic_Max_Render_Width
-            .as_ptr()
-            .cast(),
-        p_out_render_max_width,
-    );
-    NVSDK_NGX_Parameter_GetUI(
-        p_in_params,
-        NVSDK_NGX_Parameter_DLSS_Get_Dynamic_Max_Render_Height
-            .as_ptr()
-            .cast(),
-        p_out_render_max_height,
-    );
-    NVSDK_NGX_Parameter_GetUI(
-        p_in_params,
-        NVSDK_NGX_Parameter_DLSS_Get_Dynamic_Min_Render_Width
-            .as_ptr()
-            .cast(),
-        p_out_render_min_width,
-    );
-    NVSDK_NGX_Parameter_GetUI(
-        p_in_params,
-        NVSDK_NGX_Parameter_DLSS_Get_Dynamic_Min_Render_Height
-            .as_ptr()
-            .cast(),
-        p_out_render_min_height,
-    );
-    NVSDK_NGX_Parameter_GetF(
-        p_in_params,
-        NVSDK_NGX_Parameter_Sharpness.as_ptr().cast(),
-        p_out_sharpness,
-    );
-
-    res
-}
-
-/// Equivalent of `NGX_VULKAN_CREATE_DLSS_EXT1` from `nvsdk_ngx_helpers_vk.h`.
+/// Equivalent of `NGX_D3D12_CREATE_DLSS_EXT` from `nvsdk_ngx_helpers.h`.
 ///
 /// # Safety
 ///
 /// All pointer parameters must be valid.
-pub unsafe fn vulkan_create_dlss_ext1(
-    in_device: ash::vk::Device,
-    in_cmd_list: ash::vk::CommandBuffer,
+pub unsafe fn d3d12_create_dlss_ext(
+    in_cmd_list: *mut ID3D12GraphicsCommandList,
     in_creation_node_mask: u32,
     in_visibility_node_mask: u32,
     pp_out_handle: *mut *mut NVSDK_NGX_Handle,
@@ -202,65 +68,27 @@ pub unsafe fn vulkan_create_dlss_ext1(
         if params.InEnableOutputSubrects { 1 } else { 0 },
     );
 
-    if !in_device.is_null() {
-        NVSDK_NGX_VULKAN_CreateFeature1(
-            in_device,
-            in_cmd_list,
-            NVSDK_NGX_Feature::NVSDK_NGX_Feature_SuperSampling,
-            p_in_params,
-            pp_out_handle,
-        )
-    } else {
-        NVSDK_NGX_VULKAN_CreateFeature(
-            in_cmd_list,
-            NVSDK_NGX_Feature::NVSDK_NGX_Feature_SuperSampling,
-            p_in_params,
-            pp_out_handle,
-        )
-    }
+    NVSDK_NGX_D3D12_CreateFeature(
+        in_cmd_list,
+        NVSDK_NGX_Feature::NVSDK_NGX_Feature_SuperSampling,
+        p_in_params,
+        pp_out_handle,
+    )
 }
 
-/// Equivalent of `NGX_VULKAN_EVALUATE_DLSS_EXT` from `nvsdk_ngx_helpers_vk.h`.
+/// Equivalent of `NGX_D3D12_EVALUATE_DLSS_EXT` from `nvsdk_ngx_helpers.h`.
 ///
 /// # Safety
 ///
 /// All pointer parameters must be valid.
-pub unsafe fn vulkan_evaluate_dlss_ext(
-    in_cmd_list: ash::vk::CommandBuffer,
+pub unsafe fn d3d12_evaluate_dlss_ext(
+    in_cmd_list: *mut ID3D12GraphicsCommandList,
     p_in_handle: *mut NVSDK_NGX_Handle,
     p_in_params: *mut NVSDK_NGX_Parameter,
-    p_in_dlss_eval_params: *mut NVSDK_NGX_VK_DLSS_Eval_Params,
+    p_in_dlss_eval_params: *mut NVSDK_NGX_D3D12_DLSS_Eval_Params,
 ) -> NVSDK_NGX_Result {
     let p = &*p_in_dlss_eval_params;
 
-    // Validate all resources
-    macro_rules! ensure {
-        ($res:expr) => {
-            if let Some(err) = ensure_vk_imageview($res) {
-                return err;
-            }
-        };
-    }
-
-    ensure!(p.Feature.pInColor);
-    ensure!(p.pInMotionVectors);
-    ensure!(p.Feature.pInOutput);
-    ensure!(p.pInDepth);
-    ensure!(p.pInTransparencyMask);
-    ensure!(p.pInExposureTexture);
-    ensure!(p.pInBiasCurrentColorMask);
-    for i in 0..=15 {
-        ensure!(p.GBufferSurface.pInAttrib[i]);
-    }
-    ensure!(p.pInMotionVectors3D);
-    ensure!(p.pInIsParticleMask);
-    ensure!(p.pInAnimatedTextureMask);
-    ensure!(p.pInDepthHighRes);
-    ensure!(p.pInPositionViewSpace);
-    ensure!(p.pInRayTracingHitDistance);
-    ensure!(p.pInMotionVectorsReflections);
-
-    // Set parameters
     macro_rules! set_ptr {
         ($name:ident, $val:expr) => {
             NVSDK_NGX_Parameter_SetVoidPointer(p_in_params, $name.as_ptr().cast(), $val as *mut _);
@@ -484,17 +312,16 @@ pub unsafe fn vulkan_evaluate_dlss_ext(
         p.InIndicatorInvertYAxis
     );
 
-    NVSDK_NGX_VULKAN_EvaluateFeature_C(in_cmd_list, p_in_handle, p_in_params, None)
+    NVSDK_NGX_D3D12_EvaluateFeature_C(in_cmd_list, p_in_handle, p_in_params, None)
 }
 
-/// Equivalent of `NGX_VULKAN_CREATE_DLSSD_EXT1` from `nvsdk_ngx_helpers_dlssd_vk.h`.
+/// Equivalent of `NGX_D3D12_CREATE_DLSSD_EXT` from `nvsdk_ngx_helpers_dlssd.h`.
 ///
 /// # Safety
 ///
 /// All pointer parameters must be valid.
-pub unsafe fn vulkan_create_dlssd_ext1(
-    in_device: ash::vk::Device,
-    in_cmd_list: ash::vk::CommandBuffer,
+pub unsafe fn d3d12_create_dlssd_ext(
+    in_cmd_list: *mut ID3D12GraphicsCommandList,
     in_creation_node_mask: u32,
     in_visibility_node_mask: u32,
     pp_out_handle: *mut *mut NVSDK_NGX_Handle,
@@ -568,95 +395,27 @@ pub unsafe fn vulkan_create_dlssd_ext1(
         params.InUseHWDepth as u32,
     );
 
-    if !in_device.is_null() {
-        NVSDK_NGX_VULKAN_CreateFeature1(
-            in_device,
-            in_cmd_list,
-            NVSDK_NGX_Feature::NVSDK_NGX_Feature_RayReconstruction,
-            p_in_params,
-            pp_out_handle,
-        )
-    } else {
-        NVSDK_NGX_VULKAN_CreateFeature(
-            in_cmd_list,
-            NVSDK_NGX_Feature::NVSDK_NGX_Feature_RayReconstruction,
-            p_in_params,
-            pp_out_handle,
-        )
-    }
+    NVSDK_NGX_D3D12_CreateFeature(
+        in_cmd_list,
+        NVSDK_NGX_Feature::NVSDK_NGX_Feature_RayReconstruction,
+        p_in_params,
+        pp_out_handle,
+    )
 }
 
-/// Equivalent of `NGX_VULKAN_EVALUATE_DLSSD_EXT` from `nvsdk_ngx_helpers_dlssd_vk.h`.
+/// Equivalent of `NGX_D3D12_EVALUATE_DLSSD_EXT` from `nvsdk_ngx_helpers_dlssd.h`.
 ///
 /// # Safety
 ///
 /// All pointer parameters must be valid.
-pub unsafe fn vulkan_evaluate_dlssd_ext(
-    in_cmd_list: ash::vk::CommandBuffer,
+pub unsafe fn d3d12_evaluate_dlssd_ext(
+    in_cmd_list: *mut ID3D12GraphicsCommandList,
     p_in_handle: *mut NVSDK_NGX_Handle,
     p_in_params: *mut NVSDK_NGX_Parameter,
-    p_in_dlssd_eval_params: *mut NVSDK_NGX_VK_DLSSD_Eval_Params,
+    p_in_dlssd_eval_params: *mut NVSDK_NGX_D3D12_DLSSD_Eval_Params,
 ) -> NVSDK_NGX_Result {
     let p = &*p_in_dlssd_eval_params;
 
-    // Validate all resources
-    macro_rules! ensure {
-        ($res:expr) => {
-            if let Some(err) = ensure_vk_imageview($res) {
-                return err;
-            }
-        };
-    }
-
-    ensure!(p.pInColor);
-    ensure!(p.pInAlpha);
-    ensure!(p.pInMotionVectors);
-    ensure!(p.pInOutput);
-    ensure!(p.pInOutputAlpha);
-    ensure!(p.pInDepth);
-    ensure!(p.pInDiffuseAlbedo);
-    ensure!(p.pInSpecularAlbedo);
-    ensure!(p.pInTransparencyMask);
-    ensure!(p.pInExposureTexture);
-    ensure!(p.pInBiasCurrentColorMask);
-    for i in 0..=15 {
-        ensure!(p.GBufferSurface.pInAttrib[i]);
-    }
-    ensure!(p.pInMotionVectors3D);
-    ensure!(p.pInIsParticleMask);
-    ensure!(p.pInAnimatedTextureMask);
-    ensure!(p.pInDepthHighRes);
-    ensure!(p.pInPositionViewSpace);
-    ensure!(p.pInRayTracingHitDistance);
-    ensure!(p.pInMotionVectorsReflections);
-    ensure!(p.pInReflectedAlbedo);
-    ensure!(p.pInColorBeforeParticles);
-    ensure!(p.pInColorAfterParticles);
-    ensure!(p.pInColorBeforeTransparency);
-    ensure!(p.pInColorAfterTransparency);
-    ensure!(p.pInColorBeforeFog);
-    ensure!(p.pInColorAfterFog);
-    ensure!(p.pInScreenSpaceSubsurfaceScatteringGuide);
-    ensure!(p.pInColorBeforeScreenSpaceSubsurfaceScattering);
-    ensure!(p.pInColorAfterScreenSpaceSubsurfaceScattering);
-    ensure!(p.pInScreenSpaceRefractionGuide);
-    ensure!(p.pInColorBeforeScreenSpaceRefraction);
-    ensure!(p.pInColorAfterScreenSpaceRefraction);
-    ensure!(p.pInDepthOfFieldGuide);
-    ensure!(p.pInColorBeforeDepthOfField);
-    ensure!(p.pInColorAfterDepthOfField);
-    ensure!(p.pInDiffuseHitDistance);
-    ensure!(p.pInSpecularHitDistance);
-    ensure!(p.pInDiffuseRayDirection);
-    ensure!(p.pInSpecularRayDirection);
-    ensure!(p.pInDiffuseRayDirectionHitDistance);
-    ensure!(p.pInSpecularRayDirectionHitDistance);
-    ensure!(p.pInTransparencyLayer);
-    ensure!(p.pInTransparencyLayerOpacity);
-    ensure!(p.pInTransparencyLayerMvecs);
-    ensure!(p.pInDisocclusionMask);
-
-    // Set parameters
     macro_rules! set_ptr {
         ($name:ident, $val:expr) => {
             NVSDK_NGX_Parameter_SetVoidPointer(p_in_params, $name.as_ptr().cast(), $val as *mut _);
@@ -747,7 +506,7 @@ pub unsafe fn vulkan_evaluate_dlssd_ext(
         NVSDK_NGX_Parameter_GBuffer_Atrrib_9,
         p.GBufferSurface.pInAttrib[9]
     );
-    // Note: DLSSD uses GBuffer_SpecularMvec for attrib[10] instead of GBuffer_Atrrib_10
+    // DLSSD uses GBuffer_SpecularMvec for attrib[10]
     set_ptr!(
         NVSDK_NGX_Parameter_GBuffer_SpecularMvec,
         p.pInMotionVectorsReflections
@@ -1143,11 +902,11 @@ pub unsafe fn vulkan_evaluate_dlssd_ext(
     );
     set_ui!(
         NVSDK_NGX_Parameter_DLSSD_ColorAfterDepthOfField_Subrect_Base_X,
-        p.InColorAfterDepthOfFieldSubrectBase.X
+        p.InColorAfterDepthOfFieldSubtectBase.X
     );
     set_ui!(
         NVSDK_NGX_Parameter_DLSSD_ColorAfterDepthOfField_Subrect_Base_Y,
-        p.InColorAfterDepthOfFieldSubrectBase.Y
+        p.InColorAfterDepthOfFieldSubtectBase.Y
     );
     set_ui!(
         NVSDK_NGX_Parameter_DLSSD_DiffuseHitDistance_Subrect_Base_X,
@@ -1255,5 +1014,5 @@ pub unsafe fn vulkan_evaluate_dlssd_ext(
         p.InDisocclusionMaskSubrectBase.Y
     );
 
-    NVSDK_NGX_VULKAN_EvaluateFeature_C(in_cmd_list, p_in_handle, p_in_params, None)
+    NVSDK_NGX_D3D12_EvaluateFeature_C(in_cmd_list, p_in_handle, p_in_params, None)
 }

@@ -1,16 +1,20 @@
 //! Vulkan bindings to NGX.
 
-use std::rc::Rc;
-
 use ash::vk;
-use nvngx_sys::{
-    NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions, NVSDK_NGX_Feature, NVSDK_NGX_FeatureCommonInfo,
-    NVSDK_NGX_ImageViewInfo_VK, NVSDK_NGX_PerfQuality_Value, NVSDK_NGX_Resource_VK,
-    NVSDK_NGX_Resource_VK_Type, NVSDK_NGX_Resource_VK__bindgen_ty_1, Result,
+use nvngx_sys::vk::{
+    NVSDK_NGX_ImageViewInfo_VK, NVSDK_NGX_Resource_VK, NVSDK_NGX_Resource_VK_Type,
+    NVSDK_NGX_Resource_VK__bindgen_ty_1,
+};
+use nvngx_sys::{NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions, NVSDK_NGX_Feature, Result};
+
+// Bring common types into scope so submodules (feature, super_sampling,
+// ray_reconstruction) can access them via `use super::*`.
+use crate::common::{
+    Feature, FeatureHandle, FeatureParameters, FeatureRequirement,
+    RayReconstructionCreateParameters, SuperSamplingCreateParameters,
 };
 
-pub mod feature;
-pub use feature::*;
+mod feature;
 pub mod super_sampling;
 pub use super_sampling::*;
 pub mod ray_reconstruction;
@@ -33,7 +37,7 @@ impl RequiredExtensions {
         let mut instance_count = 0u32;
         let mut device_count = 0u32;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_RequiredExtensions(
+            nvngx_sys::vk::NVSDK_NGX_VULKAN_RequiredExtensions(
                 &mut instance_count,
                 &mut instance_extensions,
                 &mut device_count,
@@ -54,80 +58,6 @@ impl RequiredExtensions {
             .collect();
 
         Ok(Self { device, instance })
-    }
-}
-
-/// Owns the temporary buffers backing a [`NVSDK_NGX_FeatureCommonInfo`]
-/// passed to NGX FFI calls.
-///
-/// All buffers ([`widestring::WideString`] heap allocations and the [`Vec`]
-/// of pointers into them) are heap-allocated, so moving the
-/// `CommonInfoStorage` value does not invalidate the pointers stored inside
-/// `c_common_info`. Bind to a local before calling [`Self::as_ref()`]; the
-/// returned reference is valid for the lifetime of the borrow.
-///
-/// Wrap in [`Option`] (typically `common_info.map(CommonInfoStorage::new)`)
-/// when the surrounding API allows omitting the common info — there's no
-/// "absent" state on the storage itself.
-///
-/// NGX consumes the path list synchronously and captures `LoggingInfo` into
-/// its own state during the FFI call, so the storage only needs to outlive
-/// that single call.
-struct CommonInfoStorage {
-    // The `c_common_info.PathListInfo.Path` field points into
-    // `path_pointers`'s heap allocation, and each entry of `path_pointers`
-    // points into the corresponding `path_buffers` heap allocation. The two
-    // `Vec`s are kept alive purely so those pointers stay valid.
-    _path_buffers: Vec<widestring::WideString>,
-    _path_pointers: Vec<*const libc::wchar_t>,
-    c_common_info: NVSDK_NGX_FeatureCommonInfo,
-}
-
-impl CommonInfoStorage {
-    fn new(info: &crate::common::FeatureCommonInfo<'_>) -> Self {
-        let path_buffers: Vec<widestring::WideString> = info
-            .search_paths
-            .iter()
-            .map(|p| {
-                widestring::WideString::from_str(
-                    p.to_str().expect("NGX search paths must be valid UTF-8"),
-                )
-            })
-            .collect();
-        let path_pointers: Vec<*const libc::wchar_t> = path_buffers
-            .iter()
-            .map(|s| s.as_ptr().cast::<libc::wchar_t>())
-            .collect();
-        let c_common_info = NVSDK_NGX_FeatureCommonInfo {
-            PathListInfo: nvngx_sys::NVSDK_NGX_PathListInfo {
-                Path: if path_pointers.is_empty() {
-                    std::ptr::null()
-                } else {
-                    path_pointers.as_ptr()
-                },
-                Length: path_pointers.len() as u32,
-            },
-            InternalData: std::ptr::null_mut(),
-            LoggingInfo: match info.logging {
-                Some(cfg) => nvngx_sys::NVSDK_NGX_LoggingInfo {
-                    LoggingCallback: Some(crate::common::log_crate_callback),
-                    MinimumLoggingLevel: cfg.minimum_level.into(),
-                    DisableOtherLoggingSinks: cfg.disable_other_sinks,
-                },
-                None => nvngx_sys::NVSDK_NGX_LoggingInfo::default(),
-            },
-        };
-        Self {
-            _path_buffers: path_buffers,
-            _path_pointers: path_pointers,
-            c_common_info,
-        }
-    }
-}
-
-impl AsRef<NVSDK_NGX_FeatureCommonInfo> for CommonInfoStorage {
-    fn as_ref(&self) -> &NVSDK_NGX_FeatureCommonInfo {
-        &self.c_common_info
     }
 }
 
@@ -158,7 +88,7 @@ pub fn get_feature_requirements(
     let engine_version = std::ffi::CString::new(engine_version).unwrap();
     let application_data_path =
         widestring::WideString::from_str(application_data_path.to_str().unwrap());
-    let common_info_storage = common_info.map(CommonInfoStorage::new);
+    let common_info_storage = common_info.map(crate::common::CommonInfoStorage::new);
 
     let identifier = nvngx_sys::NVSDK_NGX_Application_Identifier {
         IdentifierType: nvngx_sys::NVSDK_NGX_Application_Identifier_Type::NVSDK_NGX_Application_Identifier_Type_Project_Id,
@@ -181,17 +111,17 @@ pub fn get_feature_requirements(
     };
     let mut out = nvngx_sys::NVSDK_NGX_FeatureRequirement::default();
     Result::from(unsafe {
-        nvngx_sys::NVSDK_NGX_VULKAN_GetFeatureRequirements(
+        nvngx_sys::vk::NVSDK_NGX_VULKAN_GetFeatureRequirements(
             instance.handle(),
             physical_device,
             &info,
             &mut out,
         )
     })
-    .map(|_| FeatureRequirement::from_raw(out))
+    .map(|()| FeatureRequirement::from_raw(out))
 }
 
-/// NVIDIA NGX system.
+/// NVIDIA NGX system (Vulkan).
 #[repr(transparent)]
 #[derive(Debug)]
 pub struct System {
@@ -222,10 +152,10 @@ impl System {
         let engine_version = std::ffi::CString::new(engine_version).unwrap();
         let application_data_path =
             widestring::WideString::from_str(application_data_path.to_str().unwrap());
-        let common_info_storage = common_info.map(CommonInfoStorage::new);
+        let common_info_storage = common_info.map(crate::common::CommonInfoStorage::new);
 
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_Init_with_ProjectID(
+            nvngx_sys::vk::NVSDK_NGX_VULKAN_Init_with_ProjectID(
                 project_id.as_ptr(),
                 engine_type,
                 engine_version.as_ptr(),
@@ -241,19 +171,19 @@ impl System {
                 nvngx_sys::NVSDK_NGX_Version::NVSDK_NGX_Version_API,
             )
         })
-        .map(|_| Self {
+        .map(|()| Self {
             device: logical_device,
         })
     }
 
     fn shutdown(&self) -> Result {
-        unsafe { nvngx_sys::NVSDK_NGX_VULKAN_Shutdown1(self.device) }.into()
+        unsafe { nvngx_sys::vk::NVSDK_NGX_VULKAN_Shutdown1(self.device) }.into()
     }
 
     /// Allocates a new [`FeatureParameters`] map pre-populated with NGX
     /// capabilities and available features.
     ///
-    /// Wraps [`nvngx_sys::NVSDK_NGX_VULKAN_GetCapabilityParameters`]. The
+    /// Wraps [`nvngx_sys::vk::NVSDK_NGX_VULKAN_GetCapabilityParameters`]. The
     /// upstream header states this *"may only be called after a successful
     /// call into NVSDK_NGX_Init"* — taking `&self` of [`System`] makes that
     /// requirement type-enforced. For Init-free per-feature support checks,
@@ -261,7 +191,7 @@ impl System {
     ///
     /// Parameter maps allocated this way pre-populate NGX capabilities (e.g.
     /// `NVSDK_NGX_Parameter_SuperSampling_Available`) but carry an allocation
-    /// overhead — use [`FeatureParameters::new()`] for empty maps when
+    /// overhead — use [`FeatureParameters::new_vk()`] for empty maps when
     /// querying capabilities is not needed.
     ///
     /// May return [`nvngx_sys::NVSDK_NGX_Result::NVSDK_NGX_Result_FAIL_OutOfDate`]
@@ -269,9 +199,11 @@ impl System {
     pub fn get_capability_parameters(&self) -> Result<FeatureParameters> {
         let mut ptr: *mut nvngx_sys::NVSDK_NGX_Parameter = std::ptr::null_mut();
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_GetCapabilityParameters(&mut ptr as *mut _)
+            nvngx_sys::vk::NVSDK_NGX_VULKAN_GetCapabilityParameters(&mut ptr as *mut _)
         })
-        .map(|_| FeatureParameters(ptr))
+        .map(|()| unsafe {
+            FeatureParameters::from_raw(ptr, nvngx_sys::vk::NVSDK_NGX_VULKAN_DestroyParameters)
+        })
     }
 
     /// Creates a new [`Feature`] with the logical device used to create
@@ -279,14 +211,14 @@ impl System {
     pub fn create_feature(
         &self,
         command_buffer: vk::CommandBuffer,
-        feature_type: nvngx_sys::NVSDK_NGX_Feature,
+        feature_type: NVSDK_NGX_Feature,
         parameters: Option<FeatureParameters>,
     ) -> Result<Feature> {
         let parameters = match parameters {
             Some(p) => p,
             None => self.get_capability_parameters()?,
         };
-        Feature::new(self.device, command_buffer, feature_type, parameters)
+        Feature::new_vk(self.device, command_buffer, feature_type, parameters)
     }
 
     /// Creates a [`SuperSamplingFeature`] (or "DLSS").
@@ -296,7 +228,7 @@ impl System {
         feature_parameters: FeatureParameters,
         create_parameters: SuperSamplingCreateParameters,
     ) -> Result<SuperSamplingFeature> {
-        Feature::new_super_sampling(
+        Feature::new_super_sampling_vk(
             self.device,
             command_buffer,
             feature_parameters,
@@ -310,7 +242,7 @@ impl System {
         command_buffer: vk::CommandBuffer,
         feature_parameters: FeatureParameters,
     ) -> Result<Feature> {
-        Feature::new_frame_generation(self.device, command_buffer, feature_parameters)
+        Feature::new_frame_generation_vk(self.device, command_buffer, feature_parameters)
     }
 
     /// Creates a [`RayReconstructionFeature`].
@@ -320,7 +252,7 @@ impl System {
         feature_parameters: FeatureParameters,
         create_parameters: RayReconstructionCreateParameters,
     ) -> Result<RayReconstructionFeature> {
-        Feature::new_ray_reconstruction(
+        Feature::new_ray_reconstruction_vk(
             self.device,
             command_buffer,
             feature_parameters,
@@ -380,7 +312,7 @@ pub struct VkImageResourceDescription {
 }
 
 impl VkImageResourceDescription {
-    /// Sets the [`mode`](Self::mode) to [`VkResourceMode::Writable`].
+    /// Sets the [`Self::mode`] to [`VkResourceMode::Writable`].
     pub fn set_writable(&mut self) {
         self.mode = VkResourceMode::Writable;
     }
@@ -421,83 +353,8 @@ impl From<VkImageResourceDescription> for NVSDK_NGX_Resource_VK {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     #[test]
     fn get_required_extensions() {
         assert!(super::RequiredExtensions::get().is_ok());
-    }
-
-    /// Ignored as it just needs to compile.
-    #[test]
-    #[ignore]
-    fn insert_parameter_debug_macro() -> super::Result {
-        let mut map = HashMap::new();
-        // Compile-only smoke test for the `insert_parameter_debug!` macro.
-        // Constructs a null-pointer `FeatureParameters` directly so we don't
-        // need a live `System` (and thus a live Vulkan device) just to type-
-        // check the expansion.
-        let parameters = super::FeatureParameters(std::ptr::null_mut());
-        crate::insert_parameter_debug!(
-            map,
-            parameters,
-            (nvngx_sys::NVSDK_NGX_EParameter_Reserved00, i32),
-            (
-                nvngx_sys::NVSDK_NGX_EParameter_SuperSampling_Available,
-                bool
-            ),
-            (nvngx_sys::NVSDK_NGX_EParameter_InPainting_Available, bool),
-            (
-                nvngx_sys::NVSDK_NGX_EParameter_ImageSuperResolution_Available,
-                bool
-            ),
-        );
-        std::mem::forget(parameters);
-
-        Ok(())
-    }
-
-    #[test]
-    fn feature_requirement_min_os_version_decodes_until_nul() {
-        let mut raw = nvngx_sys::NVSDK_NGX_FeatureRequirement::default();
-        let probe = b"Windows 10.0.19041\0garbage";
-        // SAFETY: probe fits in MinOSVersion (255 bytes), and `c_char` and `u8`
-        // share size and alignment.
-        let dst = unsafe {
-            std::slice::from_raw_parts_mut(
-                raw.MinOSVersion.as_mut_ptr().cast::<u8>(),
-                raw.MinOSVersion.len(),
-            )
-        };
-        dst[..probe.len()].copy_from_slice(probe);
-        let req = super::FeatureRequirement::from_raw(raw);
-        assert_eq!(req.min_os_version().unwrap(), "Windows 10.0.19041");
-    }
-
-    #[test]
-    fn feature_requirement_min_os_version_handles_unterminated() {
-        let mut raw = nvngx_sys::NVSDK_NGX_FeatureRequirement::default();
-        // Fill the entire buffer without a NUL terminator. `from_bytes_until_nul`
-        // must fail rather than read out of bounds; `min_os_version` propagates
-        // that error.
-        unsafe {
-            std::slice::from_raw_parts_mut(
-                raw.MinOSVersion.as_mut_ptr().cast::<u8>(),
-                raw.MinOSVersion.len(),
-            )
-            .fill(b'A');
-        }
-        let req = super::FeatureRequirement::from_raw(raw);
-        assert!(req.min_os_version().is_err());
-    }
-
-    #[test]
-    fn feature_requirement_supported_default() {
-        // The default-zero `FeatureRequirement` reports as supported because
-        // `NVSDK_NGX_FeatureSupportResult_Supported` is `0` per the NGX header.
-        let req =
-            super::FeatureRequirement::from_raw(nvngx_sys::NVSDK_NGX_FeatureRequirement::default());
-        assert!(req.is_supported());
-        assert!(req.check_supported().is_ok());
     }
 }
