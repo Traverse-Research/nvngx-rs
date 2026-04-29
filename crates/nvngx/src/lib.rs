@@ -2,9 +2,6 @@
 //! providing some abstractions in order to make the use easier.
 #![deny(missing_docs)]
 
-#[cfg(all(feature = "linked", feature = "loaded"))]
-compile_error!("features `linked` and `loaded` are mutually exclusive");
-
 pub mod common;
 pub use common::*;
 

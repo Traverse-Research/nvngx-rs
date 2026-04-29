@@ -78,7 +78,7 @@ impl RequiredExtensions {
     }
 
     /// Returns a list of required vulkan extensions for NGX to work.
-    #[cfg(feature = "loaded")]
+    #[cfg(all(feature = "loaded", not(feature = "linked")))]
     pub fn get(library: &nvngx_sys::library::Library) -> Result<Self> {
         let mut instance_extensions: *mut *const std::ffi::c_char = std::ptr::null_mut();
         let mut device_extensions: *mut *const std::ffi::c_char = std::ptr::null_mut();
@@ -183,7 +183,7 @@ impl System {
     /// `common_info` carries optional feature-DLL search paths and a logging
     /// callback configuration; pass [`None`] to preserve the NGX defaults (no
     /// extra search paths, logging controlled by the registry on Windows).
-    #[cfg(feature = "loaded")]
+    #[cfg(all(feature = "loaded", not(feature = "linked")))]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
         library: nvngx_sys::library::Library,

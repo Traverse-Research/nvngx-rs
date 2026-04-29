@@ -14,7 +14,7 @@ macro_rules! dispatch_fns {
             {
                 nvngx_sys::$name($($arg),*)
             }
-            #[cfg(feature = "loaded")]
+            #[cfg(all(feature = "loaded", not(feature = "linked")))]
             {
                 self.library.$name($($arg),*)
             }
@@ -28,7 +28,7 @@ macro_rules! dispatch_fns {
             {
                 nvngx_sys::$name($($arg),*)
             }
-            #[cfg(feature = "loaded")]
+            #[cfg(all(feature = "loaded", not(feature = "linked")))]
             {
                 self.library.$name($($arg),*)
             }
@@ -43,7 +43,7 @@ macro_rules! dispatch_fns {
 /// [`nvngx_sys::library::Library`] whose function pointers were resolved at
 /// runtime via `libloading`.
 pub(crate) struct Dispatch {
-    #[cfg(feature = "loaded")]
+    #[cfg(all(feature = "loaded", not(feature = "linked")))]
     library: nvngx_sys::library::Library,
 }
 
@@ -62,7 +62,7 @@ impl Dispatch {
     }
 
     /// Create a dispatch table for the `loaded` feature.
-    #[cfg(feature = "loaded")]
+    #[cfg(all(feature = "loaded", not(feature = "linked")))]
     pub(crate) fn new_loaded(library: nvngx_sys::library::Library) -> Self {
         Self { library }
     }
