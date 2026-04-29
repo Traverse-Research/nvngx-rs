@@ -30,12 +30,12 @@ fn main() {
             let windows_mt_suffix = windows_mt_suffix();
             // TODO select debug and/or _iterator0/1 when /MTd or /MDd are set.
             let dbg_suffix = if true { "" } else { "_dbg" };
-            println!("cargo:rustc-link-lib=nvsdk_ngx{windows_mt_suffix}{dbg_suffix}");
+            println!("cargo:rustc-link-lib=static=nvsdk_ngx{windows_mt_suffix}{dbg_suffix}");
             println!("cargo:rustc-link-search={}", link_library_path.display());
         }
         "linux" => {
             // On Linux there is only one link-library
-            println!("cargo:rustc-link-lib=nvsdk_ngx");
+            println!("cargo:rustc-link-lib=static=nvsdk_ngx");
             println!("cargo:rustc-link-lib=stdc++");
             println!("cargo:rustc-link-search={}", dlss_library_path.display());
         }
