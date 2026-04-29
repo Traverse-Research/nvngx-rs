@@ -9,6 +9,9 @@ use nvngx_sys::{
     NVSDK_NGX_Resource_VK__bindgen_ty_1, Result,
 };
 
+pub(crate) mod dispatch;
+pub(crate) mod helpers;
+
 pub mod feature;
 pub use feature::*;
 pub mod super_sampling;
@@ -51,6 +54,7 @@ impl RequiredExtensions {
     }
 
     /// Returns a list of required vulkan extensions for NGX to work.
+    #[cfg(feature = "linked")]
     pub fn get() -> Result<Self> {
         let mut instance_extensions: *mut *const std::ffi::c_char = std::ptr::null_mut();
         let mut device_extensions: *mut *const std::ffi::c_char = std::ptr::null_mut();
@@ -65,6 +69,44 @@ impl RequiredExtensions {
             )
         })?;
 
+        Self::parse_extensions(
+            instance_extensions,
+            instance_count,
+            device_extensions,
+            device_count,
+        )
+    }
+
+    /// Returns a list of required vulkan extensions for NGX to work.
+    #[cfg(feature = "loaded")]
+    pub fn get(library: &nvngx_sys::library::Library) -> Result<Self> {
+        let mut instance_extensions: *mut *const std::ffi::c_char = std::ptr::null_mut();
+        let mut device_extensions: *mut *const std::ffi::c_char = std::ptr::null_mut();
+        let mut instance_count = 0u32;
+        let mut device_count = 0u32;
+        Result::from(unsafe {
+            library.NVSDK_NGX_VULKAN_RequiredExtensions(
+                &mut instance_count,
+                &mut instance_extensions,
+                &mut device_count,
+                &mut device_extensions,
+            )
+        })?;
+
+        Self::parse_extensions(
+            instance_extensions,
+            instance_count,
+            device_extensions,
+            device_count,
+        )
+    }
+
+    fn parse_extensions(
+        instance_extensions: *mut *const std::ffi::c_char,
+        instance_count: u32,
+        device_extensions: *mut *const std::ffi::c_char,
+        device_count: u32,
+    ) -> Result<Self> {
         let mut instance = Vec::new();
         for i in 0..instance_count {
             instance.push(unsafe {
@@ -95,20 +137,82 @@ impl RequiredExtensions {
 }
 
 /// NVIDIA NGX system.
-#[repr(transparent)]
 #[derive(Debug)]
 pub struct System {
     device: vk::Device,
+    dispatch: Rc<dispatch::Dispatch>,
 }
 
 impl System {
-    /// Creates a new NVIDIA NGX system.
+    /// Creates a new NVIDIA NGX system (linked).
     ///
     /// `common_info` carries optional feature-DLL search paths and a logging
     /// callback configuration; pass [`None`] to preserve the NGX defaults (no
     /// extra search paths, logging controlled by the registry on Windows).
+    #[cfg(feature = "linked")]
     #[allow(clippy::too_many_arguments)]
     pub fn new(
+        project_id: Option<uuid::Uuid>,
+        engine_version: &str,
+        application_data_path: &std::path::Path,
+        entry: &ash::Entry,
+        instance: &ash::Instance,
+        physical_device: vk::PhysicalDevice,
+        logical_device: vk::Device,
+        common_info: Option<&crate::common::FeatureCommonInfo<'_>>,
+    ) -> Result<Self> {
+        let dispatch = Rc::new(dispatch::Dispatch::new_linked());
+        Self::new_inner(
+            dispatch,
+            project_id,
+            engine_version,
+            application_data_path,
+            entry,
+            instance,
+            physical_device,
+            logical_device,
+            common_info,
+        )
+    }
+
+    /// Creates a new NVIDIA NGX system (loaded).
+    ///
+    /// `library` is the runtime-loaded NGX library obtained via
+    /// [`nvngx_sys::library::Library::new`].
+    ///
+    /// `common_info` carries optional feature-DLL search paths and a logging
+    /// callback configuration; pass [`None`] to preserve the NGX defaults (no
+    /// extra search paths, logging controlled by the registry on Windows).
+    #[cfg(feature = "loaded")]
+    #[allow(clippy::too_many_arguments)]
+    pub fn new(
+        library: nvngx_sys::library::Library,
+        project_id: Option<uuid::Uuid>,
+        engine_version: &str,
+        application_data_path: &std::path::Path,
+        entry: &ash::Entry,
+        instance: &ash::Instance,
+        physical_device: vk::PhysicalDevice,
+        logical_device: vk::Device,
+        common_info: Option<&crate::common::FeatureCommonInfo<'_>>,
+    ) -> Result<Self> {
+        let dispatch = Rc::new(dispatch::Dispatch::new_loaded(library));
+        Self::new_inner(
+            dispatch,
+            project_id,
+            engine_version,
+            application_data_path,
+            entry,
+            instance,
+            physical_device,
+            logical_device,
+            common_info,
+        )
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn new_inner(
+        dispatch: Rc<dispatch::Dispatch>,
         project_id: Option<uuid::Uuid>,
         engine_version: &str,
         application_data_path: &std::path::Path,
@@ -174,7 +278,7 @@ impl System {
         };
 
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_Init_with_ProjectID(
+            dispatch.NVSDK_NGX_VULKAN_Init_with_ProjectID(
                 project_id.as_ptr(),
                 engine_type,
                 engine_version.as_ptr(),
@@ -190,11 +294,18 @@ impl System {
         })
         .map(|_| Self {
             device: logical_device,
+            dispatch,
         })
     }
 
     fn shutdown(&self) -> Result {
-        unsafe { nvngx_sys::NVSDK_NGX_VULKAN_Shutdown1(self.device) }.into()
+        unsafe { self.dispatch.NVSDK_NGX_VULKAN_Shutdown1(self.device) }.into()
+    }
+
+    /// Get a feature parameter set populated with NGX and feature
+    /// capabilities.
+    pub fn get_capability_parameters(&self) -> Result<FeatureParameters> {
+        FeatureParameters::get_capability_parameters(self.dispatch.clone())
     }
 
     /// Creates a new [`Feature`] with the logical device used to create
@@ -207,9 +318,15 @@ impl System {
     ) -> Result<Feature> {
         let parameters = match parameters {
             Some(p) => p,
-            None => FeatureParameters::get_capability_parameters()?,
+            None => self.get_capability_parameters()?,
         };
-        Feature::new(self.device, command_buffer, feature_type, parameters)
+        Feature::new(
+            self.dispatch.clone(),
+            self.device,
+            command_buffer,
+            feature_type,
+            parameters,
+        )
     }
 
     /// Creates a [`SuperSamplingFeature`] (or "DLSS").
@@ -220,6 +337,7 @@ impl System {
         create_parameters: SuperSamplingCreateParameters,
     ) -> Result<SuperSamplingFeature> {
         Feature::new_super_sampling(
+            self.dispatch.clone(),
             self.device,
             command_buffer,
             feature_parameters,
@@ -233,7 +351,12 @@ impl System {
         command_buffer: vk::CommandBuffer,
         feature_parameters: FeatureParameters,
     ) -> Result<Feature> {
-        Feature::new_frame_generation(self.device, command_buffer, feature_parameters)
+        Feature::new_frame_generation(
+            self.dispatch.clone(),
+            self.device,
+            command_buffer,
+            feature_parameters,
+        )
     }
 
     /// Creates a [`RayReconstructionFeature`].
@@ -244,6 +367,7 @@ impl System {
         create_parameters: RayReconstructionCreateParameters,
     ) -> Result<RayReconstructionFeature> {
         Feature::new_ray_reconstruction(
+            self.dispatch.clone(),
             self.device,
             command_buffer,
             feature_parameters,
@@ -344,40 +468,14 @@ impl From<VkImageResourceDescription> for NVSDK_NGX_Resource_VK {
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
-
     #[test]
     fn features() {
         // TODO: initialise vulkan and be able to do this.
-        // dbg!(super::FeatureParameters::get_capability_parameters().unwrap());
     }
 
+    #[cfg(feature = "linked")]
     #[test]
     fn get_required_extensions() {
         assert!(super::RequiredExtensions::get().is_ok());
-    }
-
-    /// Ignored as it just needs to compile.
-    #[test]
-    #[ignore]
-    fn insert_parameter_debug_macro() -> super::Result {
-        let mut map = HashMap::new();
-        let parameters = super::FeatureParameters::get_capability_parameters().unwrap();
-        crate::insert_parameter_debug!(
-            map,
-            parameters,
-            (nvngx_sys::NVSDK_NGX_EParameter_Reserved00, i32),
-            (
-                nvngx_sys::NVSDK_NGX_EParameter_SuperSampling_Available,
-                bool
-            ),
-            (nvngx_sys::NVSDK_NGX_EParameter_InPainting_Available, bool),
-            (
-                nvngx_sys::NVSDK_NGX_EParameter_ImageSuperResolution_Available,
-                bool
-            ),
-        );
-
-        Ok(())
     }
 }

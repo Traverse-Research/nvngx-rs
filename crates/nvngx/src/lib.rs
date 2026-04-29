@@ -2,16 +2,16 @@
 //! providing some abstractions in order to make the use easier.
 #![deny(missing_docs)]
 
+#[cfg(all(feature = "linked", feature = "loaded"))]
+compile_error!("features `linked` and `loaded` are mutually exclusive");
+
 pub mod common;
 pub use common::*;
 
 /// High-level Vulkan bindings to NGX.
-///
-/// Currently only available with the `linked` feature. Support for the
-/// `loaded` (libloading) path is planned.
-#[cfg(feature = "linked")]
+#[cfg(any(feature = "linked", feature = "loaded"))]
 pub mod vk;
-#[cfg(feature = "linked")]
+#[cfg(any(feature = "linked", feature = "loaded"))]
 pub use vk::*;
 
 pub use nvngx_sys as sys;

@@ -1,31 +1,38 @@
 //! Describes NGX features and their parameters.
 
+use super::dispatch::Dispatch;
 use super::*;
 
-/// An NGX handle. Handle might be created and used by [`Feature::new()`].
-#[repr(transparent)]
-#[derive(Debug)]
-pub struct FeatureHandle(pub(crate) *mut nvngx_sys::NVSDK_NGX_Handle);
+/// An NGX handle. Handle might be created and used by [`Feature`].
+pub struct FeatureHandle {
+    pub(crate) dispatch: Rc<Dispatch>,
+    pub(crate) ptr: *mut nvngx_sys::NVSDK_NGX_Handle,
+}
 
-impl Default for FeatureHandle {
-    fn default() -> Self {
-        Self(std::ptr::null_mut())
+impl std::fmt::Debug for FeatureHandle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FeatureHandle")
+            .field("ptr", &self.ptr)
+            .finish()
     }
 }
 
 impl FeatureHandle {
-    fn new() -> Self {
-        Self::default()
+    fn new(dispatch: Rc<Dispatch>) -> Self {
+        Self {
+            dispatch,
+            ptr: std::ptr::null_mut(),
+        }
     }
 
     fn release(&mut self) -> Result {
-        unsafe { nvngx_sys::NVSDK_NGX_VULKAN_ReleaseFeature(self.0) }.into()
+        unsafe { self.dispatch.NVSDK_NGX_VULKAN_ReleaseFeature(self.ptr) }.into()
     }
 }
 
 impl Drop for FeatureHandle {
     fn drop(&mut self) {
-        if self.0.is_null() {
+        if self.ptr.is_null() {
             return;
         }
 
@@ -98,8 +105,10 @@ macro_rules! insert_parameter_debug {
 }
 
 /// Feature parameters is a collection of parameters of a feature (ha!).
-#[repr(transparent)]
-pub struct FeatureParameters(pub(crate) *mut nvngx_sys::NVSDK_NGX_Parameter);
+pub struct FeatureParameters {
+    pub(crate) dispatch: Rc<Dispatch>,
+    pub(crate) ptr: *mut nvngx_sys::NVSDK_NGX_Parameter,
+}
 
 impl std::fmt::Debug for FeatureParameters {
     fn fmt(&self, fmt: &mut std::fmt::Formatter) -> std::fmt::Result {
@@ -111,7 +120,7 @@ impl std::fmt::Debug for FeatureParameters {
                 use std::collections::HashMap;
 
                 let mut fmt = fmt.debug_struct("FeatureParameters");
-                fmt.field("pointer_address", &self.0 .0);
+                fmt.field("pointer_address", &self.0.ptr);
 
                 let populate_map = || -> HashMap<String, String> {
                     let mut map = HashMap::new();
@@ -219,8 +228,14 @@ impl FeatureParameters {
     /// This function may only be called after a successful call into NVSDK_NGX_Init.
     pub fn new(&self) -> Result<Self> {
         let mut ptr: *mut nvngx_sys::NVSDK_NGX_Parameter = std::ptr::null_mut();
-        Result::from(unsafe { nvngx_sys::NVSDK_NGX_VULKAN_AllocateParameters(&mut ptr as *mut _) })
-            .map(|_| Self(ptr))
+        Result::from(unsafe {
+            self.dispatch
+                .NVSDK_NGX_VULKAN_AllocateParameters(&mut ptr as *mut _)
+        })
+        .map(|_| Self {
+            dispatch: self.dispatch.clone(),
+            ptr,
+        })
     }
 
     /// Get a feature parameter set populated with NGX and feature
@@ -246,20 +261,20 @@ impl FeatureParameters {
     /// If NVSDK_NGX_GetCapabilityParameters fails with NVSDK_NGX_Result_FAIL_OutOfDate,
     /// NVSDK_NGX_GetParameters may be used as a fallback, to get a parameter map pre-populated
     /// with NGX capabilities and available features.
-    pub fn get_capability_parameters() -> Result<Self> {
+    pub(crate) fn get_capability_parameters(dispatch: Rc<Dispatch>) -> Result<Self> {
         let mut ptr: *mut nvngx_sys::NVSDK_NGX_Parameter = std::ptr::null_mut();
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_GetCapabilityParameters(&mut ptr as *mut _)
+            dispatch.NVSDK_NGX_VULKAN_GetCapabilityParameters(&mut ptr as *mut _)
         })
-        .map(|_| Self(ptr))
+        .map(|_| Self { dispatch, ptr })
     }
 
     /// Sets the value for the parameter named `name` to be a
     /// type-erased (`void *`) pointer.
     pub fn set_ptr<T>(&self, name: &FeatureParameterName, ptr: *mut T) {
         unsafe {
-            nvngx_sys::NVSDK_NGX_Parameter_SetVoidPointer(
-                self.0,
+            self.dispatch.NVSDK_NGX_Parameter_SetVoidPointer(
+                self.ptr,
                 name.as_ptr().cast(),
                 ptr as *mut _,
             );
@@ -271,8 +286,8 @@ impl FeatureParameters {
     pub fn get_ptr(&self, name: &FeatureParameterName) -> Result<*mut std::ffi::c_void> {
         let mut ptr = std::ptr::null_mut();
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_Parameter_GetVoidPointer(
-                self.0,
+            self.dispatch.NVSDK_NGX_Parameter_GetVoidPointer(
+                self.ptr,
                 name.as_ptr().cast(),
                 &mut ptr as *mut _,
             )
@@ -286,8 +301,8 @@ impl FeatureParameters {
     /// `true` and `0` being `false`.
     pub fn set_bool(&self, name: &FeatureParameterName, value: bool) {
         unsafe {
-            nvngx_sys::NVSDK_NGX_Parameter_SetI(
-                self.0,
+            self.dispatch.NVSDK_NGX_Parameter_SetI(
+                self.ptr,
                 name.as_ptr().cast(),
                 if value { 1 } else { 0 },
             )
@@ -301,78 +316,113 @@ impl FeatureParameters {
     pub fn get_bool(&self, name: &FeatureParameterName) -> Result<bool> {
         let mut value = 0i32;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_Parameter_GetI(self.0, name.as_ptr().cast(), &mut value as *mut _)
+            self.dispatch.NVSDK_NGX_Parameter_GetI(
+                self.ptr,
+                name.as_ptr().cast(),
+                &mut value as *mut _,
+            )
         })
         .map(|_| value == 1)
     }
 
     /// Sets an [`f32`] value for the parameter named `name`.
     pub fn set_f32(&self, name: &FeatureParameterName, value: f32) {
-        unsafe { nvngx_sys::NVSDK_NGX_Parameter_SetF(self.0, name.as_ptr().cast(), value) }
+        unsafe {
+            self.dispatch
+                .NVSDK_NGX_Parameter_SetF(self.ptr, name.as_ptr().cast(), value)
+        }
     }
 
     /// Returns a [`f32`] value of a parameter named `name`.
     pub fn get_f32(&self, name: &FeatureParameterName) -> Result<f32> {
         let mut value = 0f32;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_Parameter_GetF(self.0, name.as_ptr().cast(), &mut value as *mut _)
+            self.dispatch.NVSDK_NGX_Parameter_GetF(
+                self.ptr,
+                name.as_ptr().cast(),
+                &mut value as *mut _,
+            )
         })
         .map(|_| value)
     }
 
     /// Sets an [`u32`] value for the parameter named `name`.
     pub fn set_u32(&self, name: &FeatureParameterName, value: u32) {
-        unsafe { nvngx_sys::NVSDK_NGX_Parameter_SetUI(self.0, name.as_ptr().cast(), value) }
+        unsafe {
+            self.dispatch
+                .NVSDK_NGX_Parameter_SetUI(self.ptr, name.as_ptr().cast(), value)
+        }
     }
 
     /// Returns a [`u32`] value of a parameter named `name`.
     pub fn get_u32(&self, name: &FeatureParameterName) -> Result<u32> {
         let mut value = 0u32;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_Parameter_GetUI(self.0, name.as_ptr().cast(), &mut value as *mut _)
+            self.dispatch.NVSDK_NGX_Parameter_GetUI(
+                self.ptr,
+                name.as_ptr().cast(),
+                &mut value as *mut _,
+            )
         })
         .map(|_| value)
     }
 
     /// Sets an [`f64`] value for the parameter named `name`.
     pub fn set_f64(&self, name: &FeatureParameterName, value: f64) {
-        unsafe { nvngx_sys::NVSDK_NGX_Parameter_SetD(self.0, name.as_ptr().cast(), value) }
+        unsafe {
+            self.dispatch
+                .NVSDK_NGX_Parameter_SetD(self.ptr, name.as_ptr().cast(), value)
+        }
     }
 
     /// Returns a [`f64`] value of a parameter named `name`.
     pub fn get_f64(&self, name: &FeatureParameterName) -> Result<f64> {
         let mut value = 0f64;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_Parameter_GetD(self.0, name.as_ptr().cast(), &mut value as *mut _)
+            self.dispatch.NVSDK_NGX_Parameter_GetD(
+                self.ptr,
+                name.as_ptr().cast(),
+                &mut value as *mut _,
+            )
         })
         .map(|_| value)
     }
 
     /// Sets an [`i32`] value for the parameter named `name`.
     pub fn set_i32(&self, name: &FeatureParameterName, value: i32) {
-        unsafe { nvngx_sys::NVSDK_NGX_Parameter_SetI(self.0, name.as_ptr().cast(), value) }
+        unsafe {
+            self.dispatch
+                .NVSDK_NGX_Parameter_SetI(self.ptr, name.as_ptr().cast(), value)
+        }
     }
 
     /// Returns a [`i32`] value of a parameter named `name`.
     pub fn get_i32(&self, name: &FeatureParameterName) -> Result<i32> {
         let mut value = 0i32;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_Parameter_GetI(self.0, name.as_ptr().cast(), &mut value as *mut _)
+            self.dispatch.NVSDK_NGX_Parameter_GetI(
+                self.ptr,
+                name.as_ptr().cast(),
+                &mut value as *mut _,
+            )
         })
         .map(|_| value)
     }
 
     /// Sets an [`u64`] value for the parameter named `name`.
     pub fn set_u64(&self, name: &FeatureParameterName, value: u64) {
-        unsafe { nvngx_sys::NVSDK_NGX_Parameter_SetULL(self.0, name.as_ptr().cast(), value) }
+        unsafe {
+            self.dispatch
+                .NVSDK_NGX_Parameter_SetULL(self.ptr, name.as_ptr().cast(), value)
+        }
     }
 
     /// Returns a [`u64`] value of a parameter named `name`.
     pub fn get_u64(&self, name: &FeatureParameterName) -> Result<u64> {
         let mut value = 0u64;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_Parameter_GetULL(
-                self.0,
+            self.dispatch.NVSDK_NGX_Parameter_GetULL(
+                self.ptr,
                 name.as_ptr().cast(),
                 &mut value as *mut _,
             )
@@ -422,18 +472,6 @@ impl FeatureParameters {
         }
     }
 
-    /// Returns [`Ok`] if the parameters claim to support the
-    /// super sampling feature ([`nvngx_sys::NVSDK_NGX_Parameter_SuperSampling_Available`]).
-    pub fn supports_super_sampling_static() -> Result<()> {
-        Self::get_capability_parameters()?.supports_super_sampling()
-    }
-
-    /// Returns [`Ok`] if the parameters claim to support the
-    /// super sampling feature ([`nvngx_sys::NVSDK_NGX_Parameter_SuperSampling_Available`]).
-    pub fn supports_ray_reconstruction_static() -> Result<()> {
-        Self::get_capability_parameters()?.supports_ray_reconstruction()
-    }
-
     /// Returns [`true`] if the SuperSampling feature is initialised
     /// correctly.
     pub fn is_super_sampling_initialised(&self) -> bool {
@@ -450,7 +488,7 @@ impl FeatureParameters {
 
     /// Deallocates the feature parameter set.
     fn release(&self) -> Result {
-        unsafe { nvngx_sys::NVSDK_NGX_VULKAN_DestroyParameters(self.0) }.into()
+        unsafe { self.dispatch.NVSDK_NGX_VULKAN_DestroyParameters(self.ptr) }.into()
     }
 }
 
@@ -468,6 +506,8 @@ impl Drop for FeatureParameters {
 /// Describes a single NGX feature.
 #[derive(Debug)]
 pub struct Feature {
+    /// The dispatch table.
+    pub(crate) dispatch: Rc<Dispatch>,
     /// The feature handle.
     pub handle: Rc<FeatureHandle>,
     /// The type of the feature.
@@ -478,23 +518,25 @@ pub struct Feature {
 
 impl Feature {
     /// Creates a new feature.
-    pub fn new(
+    pub(crate) fn new(
+        dispatch: Rc<Dispatch>,
         device: vk::Device,
         command_buffer: vk::CommandBuffer,
         feature_type: nvngx_sys::NVSDK_NGX_Feature,
         parameters: FeatureParameters,
     ) -> Result<Self> {
-        let mut handle = FeatureHandle::new();
+        let mut handle = FeatureHandle::new(dispatch.clone());
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_CreateFeature1(
+            dispatch.NVSDK_NGX_VULKAN_CreateFeature1(
                 device,
                 command_buffer,
                 feature_type,
-                parameters.0,
-                &mut handle.0 as *mut _,
+                parameters.ptr,
+                &mut handle.ptr as *mut _,
             )
         })
         .map(|_| Self {
+            dispatch,
             handle: handle.into(),
             feature_type,
             parameters: parameters.into(),
@@ -502,7 +544,8 @@ impl Feature {
     }
 
     /// Creates a new [`SuperSamplingFeature`].
-    pub fn new_super_sampling(
+    pub(crate) fn new_super_sampling(
+        dispatch: Rc<Dispatch>,
         device: vk::Device,
         command_buffer: vk::CommandBuffer,
         parameters: FeatureParameters,
@@ -516,19 +559,21 @@ impl Feature {
             .width(super_sampling_create_parameters.0.Feature.InTargetWidth)
             .height(super_sampling_create_parameters.0.Feature.InTargetHeight);
         unsafe {
-            let mut handle = FeatureHandle::new();
-            Result::from(nvngx_sys::helpers::vulkan_create_dlss_ext1(
+            let mut handle = FeatureHandle::new(dispatch.clone());
+            Result::from(super::helpers::vulkan_create_dlss_ext1(
+                &dispatch,
                 device,
                 command_buffer,
                 1,
                 1,
-                &mut handle.0 as *mut _,
-                parameters.0,
+                &mut handle.ptr as *mut _,
+                parameters.ptr,
                 &mut super_sampling_create_parameters.0 as *mut _,
             ))
             .and_then(|_| {
                 SuperSamplingFeature::new(
                     Self {
+                        dispatch,
                         handle: handle.into(),
                         feature_type,
                         parameters: parameters.into(),
@@ -541,17 +586,19 @@ impl Feature {
     }
 
     /// Creates a Frame Generation [`Feature`].
-    pub fn new_frame_generation(
+    pub(crate) fn new_frame_generation(
+        dispatch: Rc<Dispatch>,
         device: vk::Device,
         command_buffer: vk::CommandBuffer,
         parameters: FeatureParameters,
     ) -> Result<Self> {
         let feature_type = NVSDK_NGX_Feature::NVSDK_NGX_Feature_FrameGeneration;
-        Self::new(device, command_buffer, feature_type, parameters)
+        Self::new(dispatch, device, command_buffer, feature_type, parameters)
     }
 
     /// Creates a new [`RayReconstructionFeature`].
-    pub fn new_ray_reconstruction(
+    pub(crate) fn new_ray_reconstruction(
+        dispatch: Rc<Dispatch>,
         device: vk::Device,
         command_buffer: vk::CommandBuffer,
         parameters: FeatureParameters,
@@ -566,19 +613,21 @@ impl Feature {
             .height(ray_reconstruction_create_parameters.0.InTargetHeight);
 
         unsafe {
-            let mut handle = FeatureHandle::new();
-            Result::from(nvngx_sys::helpers::vulkan_create_dlssd_ext1(
+            let mut handle = FeatureHandle::new(dispatch.clone());
+            Result::from(super::helpers::vulkan_create_dlssd_ext1(
+                &dispatch,
                 device,
                 command_buffer,
                 1,
                 1,
-                &mut handle.0 as *mut _,
-                parameters.0,
+                &mut handle.ptr as *mut _,
+                parameters.ptr,
                 &mut ray_reconstruction_create_parameters.0 as *mut _,
             ))
             .and_then(|_| {
                 RayReconstructionFeature::new(
                     Self {
+                        dispatch,
                         handle: handle.into(),
                         feature_type,
                         parameters: parameters.into(),
@@ -635,9 +684,9 @@ impl Feature {
     pub fn get_scratch_buffer_size(&self) -> Result<usize> {
         let mut size = 0usize;
         Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_GetScratchBufferSize(
+            self.dispatch.NVSDK_NGX_VULKAN_GetScratchBufferSize(
                 self.feature_type,
-                self.parameters.0 as _,
+                self.parameters.ptr as _,
                 &mut size as *mut _,
             )
         })
@@ -655,10 +704,10 @@ impl Feature {
     /// albedo, normals, depth etc)
     pub fn evaluate(&self, command_buffer: vk::CommandBuffer) -> Result {
         unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_EvaluateFeature_C(
+            self.dispatch.NVSDK_NGX_VULKAN_EvaluateFeature_C(
                 command_buffer,
-                self.handle.0,
-                self.parameters.0,
+                self.handle.ptr,
+                self.parameters.ptr,
                 Some(feature_progress_callback),
             )
         }

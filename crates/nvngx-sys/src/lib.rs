@@ -5,6 +5,9 @@
 #![allow(non_snake_case)]
 #![allow(clippy::all)]
 
+#[cfg(all(feature = "linked", feature = "loaded"))]
+compile_error!("features `linked` and `loaded` are mutually exclusive");
+
 use ash::vk::{
     Buffer as VkBuffer, CommandBuffer as VkCommandBuffer, Device as VkDevice,
     ExtensionProperties as VkExtensionProperties, Format as VkFormat, Image as VkImage,
