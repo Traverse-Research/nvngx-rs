@@ -1,13 +1,13 @@
 [package]
 name = "nvngx"
 version.workspace = true
-edition = "2021"
+edition.workspace = true
+license.workspace = true
+keywords.workspace = true
+rust-version.workspace = true
 authors = ["Victor Polevoy <maintainer@vpolevoy.com>"]
 description = "NVIDIA NGX bindings."
 readme = "README.md"
-license = "MIT"
-keywords = ["nvidia", "ngx", "DLSS", "upscaling", "supersampling"]
-rust-version = "1.70"
 repository = "https://github.com/iddm/nvngx-rs"
 
 [dependencies]
