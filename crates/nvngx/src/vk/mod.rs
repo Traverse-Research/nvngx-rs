@@ -16,44 +16,20 @@ pub use super_sampling::*;
 pub mod ray_reconstruction;
 pub use ray_reconstruction::*;
 
-fn convert_slice_of_strings_to_cstrings(data: &[String]) -> Result<Vec<std::ffi::CString>> {
-    let strings: Vec<_> = data
-        .iter()
-        .cloned()
-        .map(std::ffi::CString::new)
-        .collect::<Result<_, _>>()
-        // TODO: Add NulError to our Error enum?
-        .map_err(|_| "Couldn't convert the extensions to CStrings.".to_string())?;
-
-    Ok(strings)
-}
-
 /// Vulkan extensions required for the NVIDIA NGX operation.
 #[derive(Debug, Clone)]
 pub struct RequiredExtensions {
     /// Vulkan device extensions required for NVIDIA NGX.
-    pub device: Vec<String>,
+    pub device: Vec<std::ffi::CString>,
     /// Vulkan instance extensions required for NVIDIA NGX.
-    pub instance: Vec<String>,
+    pub instance: Vec<std::ffi::CString>,
 }
 
 impl RequiredExtensions {
-    /// Returns a list of device extensions as a list of
-    /// [`std::ffi::CString`].
-    pub fn get_device_extensions_c_strings(&self) -> Result<Vec<std::ffi::CString>> {
-        convert_slice_of_strings_to_cstrings(&self.device)
-    }
-
-    /// Returns a list of instance extensions as a list of
-    /// [`std::ffi::CString`].
-    pub fn get_instance_extensions_c_strings(&self) -> Result<Vec<std::ffi::CString>> {
-        convert_slice_of_strings_to_cstrings(&self.instance)
-    }
-
     /// Returns a list of required vulkan extensions for NGX to work.
     pub fn get() -> Result<Self> {
-        let mut instance_extensions: *mut *const std::ffi::c_char = std::ptr::null_mut();
-        let mut device_extensions: *mut *const std::ffi::c_char = std::ptr::null_mut();
+        let mut instance_extensions = std::ptr::null_mut();
+        let mut device_extensions = std::ptr::null_mut();
         let mut instance_count = 0u32;
         let mut device_count = 0u32;
         Result::from(unsafe {
@@ -65,30 +41,17 @@ impl RequiredExtensions {
             )
         })?;
 
-        let mut instance = Vec::new();
-        for i in 0..instance_count {
-            instance.push(unsafe {
-                std::ffi::CStr::from_ptr(*instance_extensions.add(i as usize))
-                    .to_str()
-                    .map(|s| s.to_owned())
-                    .unwrap()
-            });
-        }
+        let instance = (0..instance_count)
+            .map(|i| unsafe {
+                std::ffi::CStr::from_ptr(*instance_extensions.add(i as usize)).to_owned()
+            })
+            .collect();
 
-        let mut device = Vec::new();
-        for i in 0..device_count {
-            device.push(unsafe {
-                std::ffi::CStr::from_ptr(*device_extensions.add(i as usize))
-                    .to_str()
-                    .map(|s| s.to_owned())
-                    .unwrap()
-            });
-        }
-
-        // unsafe {
-        //     libc::free(device_extensions as _);
-        //     libc::free(instance_extensions as _);
-        // }
+        let device = (0..device_count)
+            .map(|i| unsafe {
+                std::ffi::CStr::from_ptr(*device_extensions.add(i as usize)).to_owned()
+            })
+            .collect();
 
         Ok(Self { device, instance })
     }
