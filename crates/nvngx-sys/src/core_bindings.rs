@@ -543,6 +543,7 @@ pub const NVSDK_NGX_Parameter_RayReconstruction_Hint_Render_Preset_UltraQuality:
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum NVSDK_NGX_DLSS_Hint_Render_Preset {
     NVSDK_NGX_DLSS_Hint_Render_Preset_Default = 0,
+    NVSDK_NGX_DLSS_Hint_Render_Preset_E = 5,
     NVSDK_NGX_DLSS_Hint_Render_Preset_F = 6,
     NVSDK_NGX_DLSS_Hint_Render_Preset_G = 7,
     NVSDK_NGX_DLSS_Hint_Render_Preset_H_Reserved = 8,
@@ -611,7 +612,8 @@ pub enum NVSDK_NGX_Feature {
     NVSDK_NGX_Feature_Reserved14 = 14,
     NVSDK_NGX_Feature_Reserved15 = 15,
     NVSDK_NGX_Feature_Reserved16 = 16,
-    NVSDK_NGX_Feature_Count = 17,
+    NVSDK_NGX_Feature_Reserved17 = 17,
+    NVSDK_NGX_Feature_Count = 18,
     NVSDK_NGX_Feature_Reserved_SDK = 32764,
     NVSDK_NGX_Feature_Reserved_Core = 32765,
     NVSDK_NGX_Feature_Reserved_Unknown = 32766,
