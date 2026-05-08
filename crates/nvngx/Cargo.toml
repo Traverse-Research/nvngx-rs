@@ -14,7 +14,7 @@ repository = "https://github.com/iddm/nvngx-rs"
 widestring = "1"
 ash = "0.38"
 libc = "0.2"
-log = "0.4"
+log = "0.4.4"
 uuid = { version = "1", features = ["v4"] }
 derive_builder = "0.20"
 nvngx-sys = { version = "0.3.1",  path = "../nvngx-sys" }
