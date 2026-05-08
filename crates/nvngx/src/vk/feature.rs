@@ -223,37 +223,6 @@ impl FeatureParameters {
             .map(|_| Self(ptr))
     }
 
-    /// Get a feature parameter set populated with NGX and feature
-    /// capabilities.
-    ///
-    /// # NVIDIA documentation
-    ///
-    /// This interface allows the app to create a new parameter map
-    /// pre-populated with NGX capabilities and available features.
-    /// The output parameter map can also be used for any purpose
-    /// parameter maps output by NVSDK_NGX_AllocateParameters can be used for
-    /// but it is not recommended to use NVSDK_NGX_GetCapabilityParameters
-    /// unless querying NGX capabilities and available features
-    /// due to the overhead associated with pre-populating the parameter map.
-    /// Parameter maps output by NVSDK_NGX_GetCapabilityParameters must NOT be freed using
-    /// the free/delete operator; to free a parameter map
-    /// output by NVSDK_NGX_GetCapabilityParameters, NVSDK_NGX_DestroyParameters should be used.
-    /// Unlike with NVSDK_NGX_GetParameters, parameter maps allocated with NVSDK_NGX_GetCapabilityParameters
-    /// must be destroyed by the app using NVSDK_NGX_DestroyParameters.
-    /// This function may return NVSDK_NGX_Result_FAIL_OutOfDate if an older driver, which
-    /// does not support this API call is being used. This function may only be called
-    /// after a successful call into NVSDK_NGX_Init.
-    /// If NVSDK_NGX_GetCapabilityParameters fails with NVSDK_NGX_Result_FAIL_OutOfDate,
-    /// NVSDK_NGX_GetParameters may be used as a fallback, to get a parameter map pre-populated
-    /// with NGX capabilities and available features.
-    pub fn get_capability_parameters() -> Result<Self> {
-        let mut ptr: *mut nvngx_sys::NVSDK_NGX_Parameter = std::ptr::null_mut();
-        Result::from(unsafe {
-            nvngx_sys::NVSDK_NGX_VULKAN_GetCapabilityParameters(&mut ptr as *mut _)
-        })
-        .map(|_| Self(ptr))
-    }
-
     /// Sets the value for the parameter named `name` to be a
     /// type-erased (`void *`) pointer.
     pub fn set_ptr<T>(&self, name: &FeatureParameterName, ptr: *mut T) {
@@ -420,18 +389,6 @@ impl FeatureParameters {
             )),
             Err(e) => Err(e),
         }
-    }
-
-    /// Returns [`Ok`] if the parameters claim to support the
-    /// super sampling feature ([`nvngx_sys::NVSDK_NGX_Parameter_SuperSampling_Available`]).
-    pub fn supports_super_sampling_static() -> Result<()> {
-        Self::get_capability_parameters()?.supports_super_sampling()
-    }
-
-    /// Returns [`Ok`] if the parameters claim to support the
-    /// super sampling feature ([`nvngx_sys::NVSDK_NGX_Parameter_SuperSampling_Available`]).
-    pub fn supports_ray_reconstruction_static() -> Result<()> {
-        Self::get_capability_parameters()?.supports_ray_reconstruction()
     }
 
     /// Returns [`true`] if the SuperSampling feature is initialised
@@ -670,7 +627,71 @@ unsafe extern "C" fn feature_progress_callback(progress: f32, _should_cancel: *m
     log::debug!("Feature evalution progress={progress}.");
 }
 
-/// Describes a set of NGX feature requirements.
+/// Describes a set of NGX feature requirements, returned by
+/// [`crate::vk::get_feature_requirements()`].
 #[repr(transparent)]
 #[derive(Debug)]
 pub struct FeatureRequirement(nvngx_sys::NVSDK_NGX_FeatureRequirement);
+
+impl FeatureRequirement {
+    pub(crate) fn from_raw(raw: nvngx_sys::NVSDK_NGX_FeatureRequirement) -> Self {
+        Self(raw)
+    }
+
+    /// Whether the feature is supported on this hardware/driver/OS combination.
+    ///
+    /// Per `nvsdk_ngx_vk.h`: *"FeatureSupported: Bitfield of reasons why the
+    /// feature is unsupported, as specified in NVSDK_NGX_Feature_Support_Result.
+    /// 0 if the feature is supported"*.
+    pub fn is_supported(&self) -> bool {
+        self.0.FeatureSupported
+            == nvngx_sys::NVSDK_NGX_Feature_Support_Result::NVSDK_NGX_FeatureSupportResult_Supported
+    }
+
+    /// Bitfield of reasons the feature is unsupported. Returns the
+    /// [`nvngx_sys::NVSDK_NGX_Feature_Support_Result::NVSDK_NGX_FeatureSupportResult_Supported`]
+    /// sentinel (`0`) when the feature *is* supported.
+    pub fn unsupported_reason(&self) -> nvngx_sys::NVSDK_NGX_Feature_Support_Result {
+        self.0.FeatureSupported
+    }
+
+    /// Minimum required hardware architecture, as an `NV_GPU_ARCHITECTURE_ID`
+    /// value defined in the NvAPI GPU Framework.
+    pub fn min_hw_architecture(&self) -> u32 {
+        self.0.MinHWArchitecture
+    }
+
+    /// Minimum required OS version, decoded from the fixed-size
+    /// `MinOSVersion[255]` C string. Returns [`Err`] if the buffer isn't
+    /// NUL-terminated or doesn't contain valid UTF-8.
+    pub fn min_os_version(&self) -> Result<&str> {
+        // Reinterpret the C `[c_char; 255]` (signed on most platforms) as
+        // `[u8; 255]` for `CStr::from_bytes_until_nul`. The cast is sound
+        // because `c_char` and `u8` share size and alignment.
+        let bytes: &[u8] = unsafe {
+            std::slice::from_raw_parts(
+                self.0.MinOSVersion.as_ptr().cast::<u8>(),
+                self.0.MinOSVersion.len(),
+            )
+        };
+        let cstr = std::ffi::CStr::from_bytes_until_nul(bytes).map_err(|e| {
+            nvngx_sys::Error::Other(format!("MinOSVersion not NUL-terminated: {e}"))
+        })?;
+        cstr.to_str()
+            .map_err(|e| nvngx_sys::Error::Other(format!("MinOSVersion not valid UTF-8: {e}")))
+    }
+
+    /// Returns [`Ok`] if the feature is supported, otherwise [`Err`] with a
+    /// description of the [`Self::unsupported_reason()`] bitfield.
+    pub fn check_supported(&self) -> Result<()> {
+        if self.is_supported() {
+            return Ok(());
+        }
+        let min_os_version = self.min_os_version().unwrap_or("<invalid>");
+        Err(nvngx_sys::Error::Other(format!(
+            "NGX feature unsupported: reason bitfield = {:?}, min HW arch = 0x{:x}, min OS version = {min_os_version:?}",
+            self.unsupported_reason(),
+            self.min_hw_architecture(),
+        )))
+    }
+}
