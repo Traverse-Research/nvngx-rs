@@ -6,9 +6,6 @@ on:
   schedule:
     - cron: '0 2 * * *'
 
-env:
-  minrust: 1.70.0
-
 jobs:
   test:
     name: Test
@@ -111,31 +108,28 @@ jobs:
         run: cargo clippy --workspace --all-targets --all-features -- -Dwarnings
 
   MSRV:
+    name: Build-test MSRV (${{ matrix.minrust }}) with minimal crate dependencies
     runs-on: ubuntu-latest # TODO: Matrix to lint all platforms
+
+    strategy:
+      matrix:
+        minrust: ["1.70"]
 
     steps:
       - name: Checkout sources
         uses: actions/checkout@v6
 
-      - name: Install toolchain (${{ env.minrust }})
-        id: tc
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: ${{ env.minrust }}
-          profile: minimal
-          override: true
+      - uses: dtolnay/rust-toolchain@nightly
 
-      - name: Setup cache
-        uses: actions/cache@v5
+      - name: Generate minimal-version dependencies
+        run: cargo -Zminimal-versions generate-lockfile
+
+      - uses: dtolnay/rust-toolchain@master
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-msrv-${{ steps.tc.outputs.rustc_hash }}-${{ hashFiles('**/Cargo.toml') }}
+          toolchain: ${{ matrix.minrust }}
 
       # Ensure that it still builds, while allowing warnings
-      - run: cargo check --all-features
+      - run: cargo check --workspace --all-targets --all-features
 
   doc:
     name: Build docs
