@@ -33,10 +33,15 @@ fn main() {
             println!("cargo:rustc-link-lib=static=nvsdk_ngx{windows_mt_suffix}{dbg_suffix}");
             println!("cargo:rustc-link-search={}", link_library_path.display());
             // Required by the static `nvsdk_ngx` library: registry access
-            // (`Reg*`) lives in `Advapi32`, while `MessageBoxA` and
-            // `GetWindowThreadProcessId` come from `User32`.
-            println!("cargo:rustc-link-lib=Advapi32");
-            println!("cargo:rustc-link-lib=User32");
+            // (`Reg*`) lives in `advapi32`, while `MessageBoxA` and
+            // `GetWindowThreadProcessId` come from `user32`. Lowercase
+            // is the portable spelling: rustc always appends lowercase
+            // `.lib` to the linker arg, and case-sensitive sysroots (e.g.
+            // `xwin` on Linux) only emit lowercase + SCREAMING symlinks
+            // for these — the original Microsoft files are `AdvAPI32.Lib`
+            // / `User32.Lib`, which `Foo.lib` lookups cannot match.
+            println!("cargo:rustc-link-lib=advapi32");
+            println!("cargo:rustc-link-lib=user32");
         }
         "linux" => {
             // On Linux there is only one link-library
