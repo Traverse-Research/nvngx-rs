@@ -437,7 +437,7 @@ impl Default for NVSDK_NGX_VK_Feature_Eval_Params {
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct NVSDK_NGX_VK_GBuffer {
-    pub pInAttrib: [*mut NVSDK_NGX_Resource_VK; 16usize],
+    pub pInAttrib: [*mut NVSDK_NGX_Resource_VK; 17usize],
 }
 #[test]
 fn bindgen_test_layout_NVSDK_NGX_VK_GBuffer() {
@@ -445,7 +445,7 @@ fn bindgen_test_layout_NVSDK_NGX_VK_GBuffer() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<NVSDK_NGX_VK_GBuffer>(),
-        128usize,
+        136usize,
         "Size of NVSDK_NGX_VK_GBuffer"
     );
     assert_eq!(
@@ -544,7 +544,7 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSS_Eval_Params() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<NVSDK_NGX_VK_DLSS_Eval_Params>(),
-        360usize,
+        368usize,
         "Size of NVSDK_NGX_VK_DLSS_Eval_Params"
     );
     assert_eq!(
@@ -671,47 +671,47 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSS_Eval_Params() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InToneMapperType) as usize - ptr as usize },
-        288usize,
+        296usize,
         "Offset of field: NVSDK_NGX_VK_DLSS_Eval_Params::InToneMapperType"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInMotionVectors3D) as usize - ptr as usize },
-        296usize,
+        304usize,
         "Offset of field: NVSDK_NGX_VK_DLSS_Eval_Params::pInMotionVectors3D"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInIsParticleMask) as usize - ptr as usize },
-        304usize,
+        312usize,
         "Offset of field: NVSDK_NGX_VK_DLSS_Eval_Params::pInIsParticleMask"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInAnimatedTextureMask) as usize - ptr as usize },
-        312usize,
+        320usize,
         "Offset of field: NVSDK_NGX_VK_DLSS_Eval_Params::pInAnimatedTextureMask"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInDepthHighRes) as usize - ptr as usize },
-        320usize,
+        328usize,
         "Offset of field: NVSDK_NGX_VK_DLSS_Eval_Params::pInDepthHighRes"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInPositionViewSpace) as usize - ptr as usize },
-        328usize,
+        336usize,
         "Offset of field: NVSDK_NGX_VK_DLSS_Eval_Params::pInPositionViewSpace"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InFrameTimeDeltaInMsec) as usize - ptr as usize },
-        336usize,
+        344usize,
         "Offset of field: NVSDK_NGX_VK_DLSS_Eval_Params::InFrameTimeDeltaInMsec"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInRayTracingHitDistance) as usize - ptr as usize },
-        344usize,
+        352usize,
         "Offset of field: NVSDK_NGX_VK_DLSS_Eval_Params::pInRayTracingHitDistance"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInMotionVectorsReflections) as usize - ptr as usize },
-        352usize,
+        360usize,
         "Offset of field: NVSDK_NGX_VK_DLSS_Eval_Params::pInMotionVectorsReflections"
     );
 }
@@ -898,6 +898,8 @@ pub struct NVSDK_NGX_VK_DLSSD_Eval_Params {
     pub InTransparencyLayerMvecsSubrectBase: NVSDK_NGX_Coordinates,
     pub pInDisocclusionMask: *mut NVSDK_NGX_Resource_VK,
     pub InDisocclusionMaskSubrectBase: NVSDK_NGX_Coordinates,
+    pub pInResponsivityMask: *mut NVSDK_NGX_Resource_VK,
+    pub InResponsivityMaskSubrectBase: NVSDK_NGX_Coordinates,
 }
 #[test]
 fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
@@ -906,7 +908,7 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
     let ptr = UNINIT.as_ptr();
     assert_eq!(
         ::std::mem::size_of::<NVSDK_NGX_VK_DLSSD_Eval_Params>(),
-        880usize,
+        904usize,
         "Size of NVSDK_NGX_VK_DLSSD_Eval_Params"
     );
     assert_eq!(
@@ -1334,64 +1336,64 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InToneMapperType) as usize - ptr as usize },
-        744usize,
+        752usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InToneMapperType"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInMotionVectors3D) as usize - ptr as usize },
-        752usize,
+        760usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInMotionVectors3D"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInIsParticleMask) as usize - ptr as usize },
-        760usize,
+        768usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInIsParticleMask"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInAnimatedTextureMask) as usize - ptr as usize },
-        768usize,
+        776usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInAnimatedTextureMask"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInDepthHighRes) as usize - ptr as usize },
-        776usize,
+        784usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInDepthHighRes"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInPositionViewSpace) as usize - ptr as usize },
-        784usize,
+        792usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInPositionViewSpace"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).InFrameTimeDeltaInMsec) as usize - ptr as usize },
-        792usize,
+        800usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InFrameTimeDeltaInMsec"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInRayTracingHitDistance) as usize - ptr as usize },
-        800usize,
+        808usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInRayTracingHitDistance"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInMotionVectorsReflections) as usize - ptr as usize },
-        808usize,
+        816usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInMotionVectorsReflections"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInTransparencyLayer) as usize - ptr as usize },
-        816usize,
+        824usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInTransparencyLayer"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InTransparencyLayerSubrectBase) as usize - ptr as usize
         },
-        824usize,
+        832usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InTransparencyLayerSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInTransparencyLayerOpacity) as usize - ptr as usize },
-        832usize,
+        840usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInTransparencyLayerOpacity"
     );
     assert_eq!(
@@ -1399,32 +1401,44 @@ fn bindgen_test_layout_NVSDK_NGX_VK_DLSSD_Eval_Params() {
             ::std::ptr::addr_of!((*ptr).InTransparencyLayerOpacitySubrectBase) as usize
                 - ptr as usize
         },
-        840usize,
+        848usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InTransparencyLayerOpacitySubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInTransparencyLayerMvecs) as usize - ptr as usize },
-        848usize,
+        856usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInTransparencyLayerMvecs"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InTransparencyLayerMvecsSubrectBase) as usize - ptr as usize
         },
-        856usize,
+        864usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InTransparencyLayerMvecsSubrectBase"
     );
     assert_eq!(
         unsafe { ::std::ptr::addr_of!((*ptr).pInDisocclusionMask) as usize - ptr as usize },
-        864usize,
+        872usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInDisocclusionMask"
     );
     assert_eq!(
         unsafe {
             ::std::ptr::addr_of!((*ptr).InDisocclusionMaskSubrectBase) as usize - ptr as usize
         },
-        872usize,
+        880usize,
         "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InDisocclusionMaskSubrectBase"
+    );
+    assert_eq!(
+        unsafe { ::std::ptr::addr_of!((*ptr).pInResponsivityMask) as usize - ptr as usize },
+        888usize,
+        "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::pInResponsivityMask"
+    );
+    assert_eq!(
+        unsafe {
+            ::std::ptr::addr_of!((*ptr).InResponsivityMaskSubrectBase) as usize - ptr as usize
+        },
+        896usize,
+        "Offset of field: NVSDK_NGX_VK_DLSSD_Eval_Params::InResponsivityMaskSubrectBase"
     );
 }
 impl Default for NVSDK_NGX_VK_DLSSD_Eval_Params {
@@ -1438,6 +1452,6 @@ impl Default for NVSDK_NGX_VK_DLSSD_Eval_Params {
 }
 impl ::std::fmt::Debug for NVSDK_NGX_VK_DLSSD_Eval_Params {
     fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write ! (f , "NVSDK_NGX_VK_DLSSD_Eval_Params {{ pInDiffuseAlbedo: {:?}, pInSpecularAlbedo: {:?}, pInNormals: {:?}, pInRoughness: {:?}, pInColor: {:?}, pInAlpha: {:?}, pInOutput: {:?}, pInOutputAlpha: {:?}, pInDepth: {:?}, pInMotionVectors: {:?}, InJitterOffsetX: {:?}, InJitterOffsetY: {:?}, InReset: {:?}, InMVScaleX: {:?}, InMVScaleY: {:?}, pInTransparencyMask: {:?}, pInExposureTexture: {:?}, pInBiasCurrentColorMask: {:?}, InPreExposure: {:?}, InExposureScale: {:?}, InIndicatorInvertXAxis: {:?}, InIndicatorInvertYAxis: {:?}, pInReflectedAlbedo: {:?}, pInColorBeforeParticles: {:?}, pInColorAfterParticles: {:?}, pInColorBeforeTransparency: {:?}, pInColorAfterTransparency: {:?}, pInColorBeforeFog: {:?}, pInColorAfterFog: {:?}, pInScreenSpaceSubsurfaceScatteringGuide: {:?}, pInColorBeforeScreenSpaceSubsurfaceScattering: {:?}, pInColorAfterScreenSpaceSubsurfaceScattering: {:?}, pInScreenSpaceRefractionGuide: {:?}, pInColorBeforeScreenSpaceRefraction: {:?}, pInColorAfterScreenSpaceRefraction: {:?}, pInDepthOfFieldGuide: {:?}, pInColorBeforeDepthOfField: {:?}, pInColorAfterDepthOfField: {:?}, pInDiffuseHitDistance: {:?}, pInSpecularHitDistance: {:?}, pInDiffuseRayDirection: {:?}, pInSpecularRayDirection: {:?}, pInDiffuseRayDirectionHitDistance: {:?}, pInSpecularRayDirectionHitDistance: {:?}, pInWorldToViewMatrix: {:?}, pInViewToClipMatrix: {:?}, GBufferSurface: {:?}, pInMotionVectors3D: {:?}, pInIsParticleMask: {:?}, pInAnimatedTextureMask: {:?}, pInDepthHighRes: {:?}, pInPositionViewSpace: {:?}, InFrameTimeDeltaInMsec: {:?}, pInRayTracingHitDistance: {:?}, pInMotionVectorsReflections: {:?}, pInTransparencyLayer: {:?}, pInTransparencyLayerOpacity: {:?}, pInTransparencyLayerMvecs: {:?}, pInDisocclusionMask: {:?} }}" , self . pInDiffuseAlbedo , self . pInSpecularAlbedo , self . pInNormals , self . pInRoughness , self . pInColor , self . pInAlpha , self . pInOutput , self . pInOutputAlpha , self . pInDepth , self . pInMotionVectors , self . InJitterOffsetX , self . InJitterOffsetY , self . InReset , self . InMVScaleX , self . InMVScaleY , self . pInTransparencyMask , self . pInExposureTexture , self . pInBiasCurrentColorMask , self . InPreExposure , self . InExposureScale , self . InIndicatorInvertXAxis , self . InIndicatorInvertYAxis , self . pInReflectedAlbedo , self . pInColorBeforeParticles , self . pInColorAfterParticles , self . pInColorBeforeTransparency , self . pInColorAfterTransparency , self . pInColorBeforeFog , self . pInColorAfterFog , self . pInScreenSpaceSubsurfaceScatteringGuide , self . pInColorBeforeScreenSpaceSubsurfaceScattering , self . pInColorAfterScreenSpaceSubsurfaceScattering , self . pInScreenSpaceRefractionGuide , self . pInColorBeforeScreenSpaceRefraction , self . pInColorAfterScreenSpaceRefraction , self . pInDepthOfFieldGuide , self . pInColorBeforeDepthOfField , self . pInColorAfterDepthOfField , self . pInDiffuseHitDistance , self . pInSpecularHitDistance , self . pInDiffuseRayDirection , self . pInSpecularRayDirection , self . pInDiffuseRayDirectionHitDistance , self . pInSpecularRayDirectionHitDistance , self . pInWorldToViewMatrix , self . pInViewToClipMatrix , self . GBufferSurface , self . pInMotionVectors3D , self . pInIsParticleMask , self . pInAnimatedTextureMask , self . pInDepthHighRes , self . pInPositionViewSpace , self . InFrameTimeDeltaInMsec , self . pInRayTracingHitDistance , self . pInMotionVectorsReflections , self . pInTransparencyLayer , self . pInTransparencyLayerOpacity , self . pInTransparencyLayerMvecs , self . pInDisocclusionMask)
+        write ! (f , "NVSDK_NGX_VK_DLSSD_Eval_Params {{ pInDiffuseAlbedo: {:?}, pInSpecularAlbedo: {:?}, pInNormals: {:?}, pInRoughness: {:?}, pInColor: {:?}, pInAlpha: {:?}, pInOutput: {:?}, pInOutputAlpha: {:?}, pInDepth: {:?}, pInMotionVectors: {:?}, InJitterOffsetX: {:?}, InJitterOffsetY: {:?}, InReset: {:?}, InMVScaleX: {:?}, InMVScaleY: {:?}, pInTransparencyMask: {:?}, pInExposureTexture: {:?}, pInBiasCurrentColorMask: {:?}, InPreExposure: {:?}, InExposureScale: {:?}, InIndicatorInvertXAxis: {:?}, InIndicatorInvertYAxis: {:?}, pInReflectedAlbedo: {:?}, pInColorBeforeParticles: {:?}, pInColorAfterParticles: {:?}, pInColorBeforeTransparency: {:?}, pInColorAfterTransparency: {:?}, pInColorBeforeFog: {:?}, pInColorAfterFog: {:?}, pInScreenSpaceSubsurfaceScatteringGuide: {:?}, pInColorBeforeScreenSpaceSubsurfaceScattering: {:?}, pInColorAfterScreenSpaceSubsurfaceScattering: {:?}, pInScreenSpaceRefractionGuide: {:?}, pInColorBeforeScreenSpaceRefraction: {:?}, pInColorAfterScreenSpaceRefraction: {:?}, pInDepthOfFieldGuide: {:?}, pInColorBeforeDepthOfField: {:?}, pInColorAfterDepthOfField: {:?}, pInDiffuseHitDistance: {:?}, pInSpecularHitDistance: {:?}, pInDiffuseRayDirection: {:?}, pInSpecularRayDirection: {:?}, pInDiffuseRayDirectionHitDistance: {:?}, pInSpecularRayDirectionHitDistance: {:?}, pInWorldToViewMatrix: {:?}, pInViewToClipMatrix: {:?}, GBufferSurface: {:?}, pInMotionVectors3D: {:?}, pInIsParticleMask: {:?}, pInAnimatedTextureMask: {:?}, pInDepthHighRes: {:?}, pInPositionViewSpace: {:?}, InFrameTimeDeltaInMsec: {:?}, pInRayTracingHitDistance: {:?}, pInMotionVectorsReflections: {:?}, pInTransparencyLayer: {:?}, pInTransparencyLayerOpacity: {:?}, pInTransparencyLayerMvecs: {:?}, pInDisocclusionMask: {:?}, pInResponsivityMask: {:?} }}" , self . pInDiffuseAlbedo , self . pInSpecularAlbedo , self . pInNormals , self . pInRoughness , self . pInColor , self . pInAlpha , self . pInOutput , self . pInOutputAlpha , self . pInDepth , self . pInMotionVectors , self . InJitterOffsetX , self . InJitterOffsetY , self . InReset , self . InMVScaleX , self . InMVScaleY , self . pInTransparencyMask , self . pInExposureTexture , self . pInBiasCurrentColorMask , self . InPreExposure , self . InExposureScale , self . InIndicatorInvertXAxis , self . InIndicatorInvertYAxis , self . pInReflectedAlbedo , self . pInColorBeforeParticles , self . pInColorAfterParticles , self . pInColorBeforeTransparency , self . pInColorAfterTransparency , self . pInColorBeforeFog , self . pInColorAfterFog , self . pInScreenSpaceSubsurfaceScatteringGuide , self . pInColorBeforeScreenSpaceSubsurfaceScattering , self . pInColorAfterScreenSpaceSubsurfaceScattering , self . pInScreenSpaceRefractionGuide , self . pInColorBeforeScreenSpaceRefraction , self . pInColorAfterScreenSpaceRefraction , self . pInDepthOfFieldGuide , self . pInColorBeforeDepthOfField , self . pInColorAfterDepthOfField , self . pInDiffuseHitDistance , self . pInSpecularHitDistance , self . pInDiffuseRayDirection , self . pInSpecularRayDirection , self . pInDiffuseRayDirectionHitDistance , self . pInSpecularRayDirectionHitDistance , self . pInWorldToViewMatrix , self . pInViewToClipMatrix , self . GBufferSurface , self . pInMotionVectors3D , self . pInIsParticleMask , self . pInAnimatedTextureMask , self . pInDepthHighRes , self . pInPositionViewSpace , self . InFrameTimeDeltaInMsec , self . pInRayTracingHitDistance , self . pInMotionVectorsReflections , self . pInTransparencyLayer , self . pInTransparencyLayerOpacity , self . pInTransparencyLayerMvecs , self . pInDisocclusionMask , self . pInResponsivityMask)
     }
 }
