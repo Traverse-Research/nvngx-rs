@@ -67,6 +67,13 @@ pub enum Feature {
 
 /// Returns the path to a DLSS shared library for the given feature, platform, and configuration.
 pub fn dlss_path(feature: Feature, platform: Platform, config: Config) -> PathBuf {
+    let dlss_lib_dir = Path::new(DLSS_LIB_DIR);
+
+    assert!(
+        dlss_lib_dir.exists(),
+        "Cannot find `{dlss_lib_dir:?}`. You might be trying to reference `nvngx-bin` without it being a git/path dependency!"
+    );
+
     let config_dir = match config {
         Config::Release => "rel",
         Config::Dev => "dev",
@@ -92,7 +99,7 @@ pub fn dlss_path(feature: Feature, platform: Platform, config: Config) -> PathBu
         Platform::Windows => "Windows_x86_64",
     };
 
-    Path::new(DLSS_LIB_DIR)
+    dlss_lib_dir
         .join(platform_dir)
         .join(config_dir)
         .join(filename)
