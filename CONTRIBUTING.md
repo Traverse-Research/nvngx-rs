@@ -13,7 +13,8 @@ When bumping the DLSS SDK to a new version:
    ```
 
 2. **Update version metadata** in `Cargo.toml` (workspace-level `version` field) and any
-   crate-level overrides to reflect the new `+vX.Y.Z` DLSS SDK version.
+   crate-level overrides to reflect the new `+vX.Y.Z` DLSS SDK version, and the "DLSS
+   version used by this crate" line in `README.md` and `crates/nvngx-sys/README.md`.
 
 3. **Regenerate bindings:**
    ```sh
