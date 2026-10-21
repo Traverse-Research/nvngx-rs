@@ -7,7 +7,7 @@
 
 A Rust wrapper over the NVIDIA NGX library.
 
-The DLSS version used by this crate: [`310.9.1`](https://github.com/NVIDIA/DLSS/releases/tag/v310.9.1).
+The DLSS version used by this crate: [`310.9.16`](https://github.com/NVIDIA/DLSS/releases/tag/v310.9.16).
 
 ## Supported features
 
