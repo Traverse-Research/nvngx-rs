@@ -3,12 +3,12 @@
 //! The opaque types defined here are FFI placeholders for C forward
 //! declarations in `nvsdk_ngx.h` — they are only meant to appear as the target
 //! type of a raw pointer in a generated NGX function signature, never as
-//! values. The high-level `nvngx` crate uses the corresponding `windows` crate
+//! values. The high-level `nvngx` crate uses the corresponding `d3d12-agility`
 //! COM types in its public API and casts to the placeholders here at the FFI
 //! boundary:
 //!
 //! ```ignore
-//! use windows::core::Interface;
+//! use windows_core::Interface;
 //! let raw: *mut ID3D12Device = device.as_raw().cast();
 //! ```
 

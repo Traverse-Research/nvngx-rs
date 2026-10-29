@@ -1,8 +1,7 @@
 //! DX12-specific DLSS (super sampling) evaluation and feature types.
 
+use d3d12_agility::ID3D12Resource;
 use nvngx_sys::{NVSDK_NGX_Coordinates, NVSDK_NGX_Dimensions};
-use windows::core::Interface;
-use windows::Win32::Graphics::Direct3D12;
 
 use super::*;
 
@@ -31,22 +30,18 @@ impl SuperSamplingEvaluationParameters {
     }
 
     /// Sets the color input parameter (the image to upscale).
-    pub fn set_color_input(&mut self, resource: &Direct3D12::ID3D12Resource) {
+    pub fn set_color_input(&mut self, resource: &ID3D12Resource) {
         self.parameters.Feature.pInColor = resource.as_raw() as *mut nvngx_sys::dx::ID3D12Resource;
     }
 
     /// Sets the color output (the upscaled image).
-    pub fn set_color_output(&mut self, resource: &Direct3D12::ID3D12Resource) {
+    pub fn set_color_output(&mut self, resource: &ID3D12Resource) {
         self.parameters.Feature.pInOutput = resource.as_raw() as *mut nvngx_sys::dx::ID3D12Resource;
     }
 
     /// Sets the motion vectors.
     /// In case the `scale` argument is omitted, the `1.0f32` scaling is used.
-    pub fn set_motions_vectors(
-        &mut self,
-        resource: &Direct3D12::ID3D12Resource,
-        scale: Option<[f32; 2]>,
-    ) {
+    pub fn set_motions_vectors(&mut self, resource: &ID3D12Resource, scale: Option<[f32; 2]>) {
         const DEFAULT_SCALING: [f32; 2] = [1.0f32, 1.0f32];
 
         self.parameters.pInMotionVectors = resource.as_raw() as *mut nvngx_sys::dx::ID3D12Resource;
@@ -56,7 +51,7 @@ impl SuperSamplingEvaluationParameters {
     }
 
     /// Sets the depth buffer.
-    pub fn set_depth_buffer(&mut self, resource: &Direct3D12::ID3D12Resource) {
+    pub fn set_depth_buffer(&mut self, resource: &ID3D12Resource) {
         self.parameters.pInDepth = resource.as_raw() as *mut nvngx_sys::dx::ID3D12Resource;
     }
 
@@ -171,7 +166,7 @@ impl SuperSamplingFeature {
     }
 
     /// Evaluates the feature.
-    pub fn evaluate(&mut self, command_list: &Direct3D12::ID3D12GraphicsCommandList) -> Result {
+    pub fn evaluate(&mut self, command_list: &ID3D12GraphicsCommandList) -> Result {
         let raw_cmd = command_list.as_raw() as *mut nvngx_sys::dx::ID3D12GraphicsCommandList;
         Result::from(unsafe {
             nvngx_sys::dx_helpers::d3d12_evaluate_dlss_ext(

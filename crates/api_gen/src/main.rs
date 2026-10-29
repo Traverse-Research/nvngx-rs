@@ -42,7 +42,7 @@ fn vulkan_sdk_include_directory() -> Option<PathBuf> {
 /// allowlist would drag in thousands of unrelated Vulkan / D3D12 / CRT types.
 /// We instead enumerate the NGX surface explicitly via regex `allowlist_item`
 /// patterns in each `generate_*_bindings` function, and bring in third-party
-/// types (Vulkan via `ash::vk`, D3D12 via the `windows` crate) on the
+/// types (Vulkan via `ash::vk`, D3D12 via the `d3d12-agility` crate) on the
 /// consumer side.
 fn common_builder(msrv: bindgen::RustTarget) -> bindgen::Builder {
     bindgen::Builder::default()
