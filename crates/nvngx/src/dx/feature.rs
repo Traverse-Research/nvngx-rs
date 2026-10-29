@@ -16,7 +16,7 @@ impl FeatureParameters {
 impl Feature {
     /// Creates a new feature via the DX12 backend.
     pub fn new_dx(
-        command_list: &Direct3D12::ID3D12GraphicsCommandList,
+        command_list: &ID3D12GraphicsCommandList,
         feature_type: nvngx_sys::NVSDK_NGX_Feature,
         parameters: FeatureParameters,
     ) -> Result<Self> {
@@ -39,7 +39,7 @@ impl Feature {
 
     /// Creates a new [`SuperSamplingFeature`] via the DX12 backend.
     pub fn new_super_sampling_dx(
-        command_list: &Direct3D12::ID3D12GraphicsCommandList,
+        command_list: &ID3D12GraphicsCommandList,
         parameters: FeatureParameters,
         mut super_sampling_create_parameters: SuperSamplingCreateParameters,
     ) -> Result<SuperSamplingFeature> {
@@ -79,7 +79,7 @@ impl Feature {
 
     /// Creates a Frame Generation [`Feature`] via the DX12 backend.
     pub fn new_frame_generation_dx(
-        command_list: &Direct3D12::ID3D12GraphicsCommandList,
+        command_list: &ID3D12GraphicsCommandList,
         parameters: FeatureParameters,
     ) -> Result<Self> {
         let feature_type = nvngx_sys::NVSDK_NGX_Feature::NVSDK_NGX_Feature_FrameGeneration;
@@ -88,7 +88,7 @@ impl Feature {
 
     /// Creates a new [`RayReconstructionFeature`] via the DX12 backend.
     pub fn new_ray_reconstruction_dx(
-        command_list: &Direct3D12::ID3D12GraphicsCommandList,
+        command_list: &ID3D12GraphicsCommandList,
         parameters: FeatureParameters,
         mut ray_reconstruction_create_parameters: RayReconstructionCreateParameters,
     ) -> Result<RayReconstructionFeature> {
@@ -140,7 +140,7 @@ impl Feature {
     }
 
     /// Evaluates the feature via the DX12 backend.
-    pub fn evaluate_dx(&self, command_list: &Direct3D12::ID3D12GraphicsCommandList) -> Result {
+    pub fn evaluate_dx(&self, command_list: &ID3D12GraphicsCommandList) -> Result {
         let raw_cmd = command_list.as_raw() as *mut nvngx_sys::dx::ID3D12GraphicsCommandList;
         unsafe {
             nvngx_sys::dx::NVSDK_NGX_D3D12_EvaluateFeature_C(

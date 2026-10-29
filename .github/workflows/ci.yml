@@ -113,7 +113,7 @@ jobs:
 
     strategy:
       matrix:
-        minrust: ["1.70"]
+        minrust: ["1.95"]
 
     steps:
       - name: Checkout sources

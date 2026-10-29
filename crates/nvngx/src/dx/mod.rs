@@ -1,8 +1,8 @@
 //! DX12 bindings to NGX.
 
+use d3d12_agility::{ID3D12Device, ID3D12GraphicsCommandList, IDXGIAdapter};
 use nvngx_sys::{NVSDK_NGX_Feature, Result};
-use windows::core::Interface;
-use windows::Win32::Graphics::{Direct3D12, Dxgi};
+use windows_core::Interface;
 
 use crate::common::{
     Feature, FeatureHandle, FeatureParameters, FeatureRequirement,
@@ -31,7 +31,7 @@ pub use ray_reconstruction::*;
 ///
 /// `adapter` is the DXGI adapter the application intends to run on.
 pub fn get_feature_requirements(
-    adapter: &Dxgi::IDXGIAdapter,
+    adapter: &IDXGIAdapter,
     feature_id: NVSDK_NGX_Feature,
     project_id: Option<uuid::Uuid>,
     engine_version: &str,
@@ -74,13 +74,13 @@ pub fn get_feature_requirements(
 
 /// NVIDIA NGX system (DX12).
 ///
-/// Holds an owning [`Direct3D12::ID3D12Device`] (refcount bump on
+/// Holds an owning [`ID3D12Device`] (refcount bump on
 /// construction) to keep the device alive for the lifetime of the
 /// [`System`]: NGX may or may not bump the device's refcount internally
 /// between `Init` and `Shutdown1`, so the caller can't rely on that.
 #[derive(Debug)]
 pub struct System {
-    device: Direct3D12::ID3D12Device,
+    device: ID3D12Device,
 }
 
 impl System {
@@ -89,7 +89,7 @@ impl System {
         project_id: Option<uuid::Uuid>,
         engine_version: &str,
         application_data_path: &std::path::Path,
-        device: &Direct3D12::ID3D12Device,
+        device: &ID3D12Device,
         common_info: Option<&crate::common::FeatureCommonInfo<'_>>,
     ) -> Result<Self> {
         let engine_type = nvngx_sys::NVSDK_NGX_EngineType::NVSDK_NGX_ENGINE_TYPE_CUSTOM;
@@ -152,7 +152,7 @@ impl System {
     /// Creates a new [`Feature`].
     pub fn create_feature(
         &self,
-        command_list: &Direct3D12::ID3D12GraphicsCommandList,
+        command_list: &ID3D12GraphicsCommandList,
         feature_type: NVSDK_NGX_Feature,
         parameters: Option<FeatureParameters>,
     ) -> Result<Feature> {
@@ -166,7 +166,7 @@ impl System {
     /// Creates a [`SuperSamplingFeature`] (or "DLSS").
     pub fn create_super_sampling_feature(
         &self,
-        command_list: &Direct3D12::ID3D12GraphicsCommandList,
+        command_list: &ID3D12GraphicsCommandList,
         feature_parameters: FeatureParameters,
         create_parameters: SuperSamplingCreateParameters,
     ) -> Result<SuperSamplingFeature> {
@@ -176,7 +176,7 @@ impl System {
     /// Creates a Frame Generation [`Feature`].
     pub fn create_frame_generation_feature(
         &self,
-        command_list: &Direct3D12::ID3D12GraphicsCommandList,
+        command_list: &ID3D12GraphicsCommandList,
         feature_parameters: FeatureParameters,
     ) -> Result<Feature> {
         Feature::new_frame_generation_dx(command_list, feature_parameters)
@@ -185,7 +185,7 @@ impl System {
     /// Creates a [`RayReconstructionFeature`].
     pub fn create_ray_reconstruction_feature(
         &self,
-        command_list: &Direct3D12::ID3D12GraphicsCommandList,
+        command_list: &ID3D12GraphicsCommandList,
         feature_parameters: FeatureParameters,
         create_parameters: RayReconstructionCreateParameters,
     ) -> Result<RayReconstructionFeature> {
